@@ -139,7 +139,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
         console.log("RegisterCtrl: removeUser: Entered with: " + uname + ", " + pword);
         $http({
             method: 'GET',
-            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/CS5551?q={"name":"'+uname+'"}&f={"password":1,"_id":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
+            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"password":1,"_id":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
         })
         .success(function(data) {
             console.log("RegisterCtrl: removeUser: Found "+data.password+", "+data._id.$oid);
@@ -169,7 +169,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
         console.log("RegisterCtrl: loginUser: Entered with: " + uname + ", " + pword);
         $http({
             method: 'GET',
-            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/CS5551?q={"name":"'+uname+'"}&f={"password":1,"address":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
+            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"password":1,"address":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
         })
         .success(function(data) {
             if (data.password == pword) {
@@ -189,13 +189,13 @@ angular.module('starter', ['ionic', 'ngCordova'])
         console.log("RegisterCtrl: changeEmail: Entered with: " + uname + ", " + pword + ", " + newemail);
         $http({
             method: 'GET',
-            url: 'https://api.mongolab.com/api/1/databases/quasily/collections/CS5551?q={"name":"'+uname+'"}&f={"_id":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
+            url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"_id":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
         })
         .success(function(dat) {
             console.log("RegisterCtrl: changeEmail: found user");
                 $http({
                     method: 'PUT',
-                    url: 'https://api.mongolab.com/api/1/databases/quasily/collections/CS5551?q={"name":"'+uname+'"}&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
+                    url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
                     data: JSON.stringify({ "$set" : { "email": newemail } }),
                     contentType: 'Application/json'
                 })
@@ -220,13 +220,13 @@ angular.module('starter', ['ionic', 'ngCordova'])
         }
         $http({
             method: 'GET',
-            url: 'https://api.mongolab.com/api/1/databases/quasily/collections/CS5551?q={"name":"'+uname+'"}&f={"password":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
+            url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"password":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
         })
         .success(function(dat) {
             if (dat.password == oldpass) {
                 $http({
                     method: 'PUT',
-                    url: 'https://api.mongolab.com/api/1/databases/quasily/collections/CS5551?q={"name":"'+uname+'"}&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
+                    url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
                     data: JSON.stringify({ "$set" : { "password": newpass } }),
                     contentType: 'Application/json'
                 })
@@ -256,7 +256,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
         
         $http({
             method: 'POST',
-            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/CS5551?apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
+            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
             data: JSON.stringify({
                 name : uname,
                 password : pword,
