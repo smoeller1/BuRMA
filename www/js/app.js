@@ -173,7 +173,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
         })
         .success(function(data) {
             if (data.password == pword) {
-                localStorage.setItem("address" : address);
+                localStorage.setItem("address", address);
                 $window.location.href = "/map.html";
             } else {
                 alert("Invalid password");
@@ -266,7 +266,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
             contentType : 'Application/json'
         })
         .success(function() {
-            localStorage.setItem("address" : address);
+            localStorage.setItem("address", address);
             console.log("RegisterCtrl: registerUser: User is registered");
             $window.location.href = "/map.html";
         })
