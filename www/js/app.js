@@ -27,24 +27,23 @@ angular.module('starter', ['ionic', 'ngCordova'])
     var posOptions = {timeout: 10000, enableHighAccuracy: false};
     
     $scope.initialize = function() {
-        console.log("initialize: Entered initialize function");
+        console.log("TodoCtrl: initialize: Entered initialize function");
         
         var lat;
         var long;
         var end = new google.maps.LatLng(0, 0);
       
         $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
-            console.log("initialize: Entered getCurrentPosition within initialize");
+            console.log("TodoCtrl: initialize: Entered getCurrentPosition within initialize");
             lat = position.coords.latitude
             long = position.coords.longitude
-            console.log("initialize: Location determined to be " + lat + ", " + long);
+            console.log("TodoCtrl: initialize: Location determined to be " + lat + ", " + long);
             var site = new google.maps.LatLng(lat, long);
-            $scope.routeingError = site.lat() + ", " + site.lng();
-            var userHome = localStorage.getItem("address");
-            if (userHome == null) {
+            console.log("TodoCtrl: initialize: getCurrentPosition: " + site.lat() + ", " + site.lng());
+            if (localStorage.getItem("address") == null) {
                 $scope.startLoc = site.lat() + ", " + site.lng();
             } else {
-                $scope.startLoc = userHome;
+                $scope.startLoc = localStorage.getItem("address") + ", " + localStorage.getItem("city") + ", " + localStorage.getItem("state") + ", " + localStorage.getItem("country");;
             }
             mapOptions = {
                 streetViewControl:true,
@@ -52,13 +51,13 @@ angular.module('starter', ['ionic', 'ngCordova'])
                 zoom: 12,
                 mapTypeId: google.maps.MapTypeId.TERRAIN
             };
-            console.log("initialize: creating new google maps Map");
+            console.log("TodoCtrl: initialize: creating new google maps Map");
             map = new google.maps.Map(document.getElementById("map"),
                 mapOptions); 
 
             $scope.map = map;
             var request = $scope.setRequest(site, end); 
-            console.log("initialize: creating directions service route");
+            console.log("TodoCtrl: initialize: creating directions service route");
             directionsService.route(request, function(response, status) {
                 if (status == google.maps.DirectionsStatus.OK) {
                     directionsDisplay.setDirections(response);
@@ -66,13 +65,13 @@ angular.module('starter', ['ionic', 'ngCordova'])
             });
             directionsDisplay.setMap(map);
         }, function(err) {
-            console.log("Einitialize: ntered error function of getCurrentPosition of initialize");
+            console.log("TodoCtrl: initialize: Entered error function of getCurrentPosition of initialize");
             $scope.routingError = "Unable to get current location";
             lat = 0;
             long = 0;
         }); 
-        console.log("initialize: Finished getCurrentPosition in initialize");
-        console.log("initialize: Finished initialize function");
+        console.log("TodoCtrl: initialize: Finished getCurrentPosition in initialize");
+        console.log("TodoCtrl: initialize: Finished initialize function");
         
        
       }; //initialize
@@ -81,7 +80,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
 
     
     $scope.centerOnMe = function() {
-        console.log("Entered centerOnMe function");
+        console.log("TodoCtrl: centerOnMe: Entered function");
         if(!$scope.map) {
           return;
         }
@@ -103,7 +102,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
       };
     
     $scope.calcRoute = function(start, end) {
-        console.log("Entered calcRoute function");
+        console.log("TodoCtrl: calcRoute: Entered function");
         var request = $scope.setRequest(start, end);
         
         directionsService.route(request, function(response, status) {
@@ -119,7 +118,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
     };
     
     $scope.setRequest = function(start, end) {
-        console.log("Entered setRequest function");
+        console.log("TodoCtrl: setRequest: Entered function");
         var request = {
             origin: start,
             destination: end,
@@ -173,7 +172,10 @@ angular.module('starter', ['ionic', 'ngCordova'])
         })
         .success(function(data) {
             if (data.password == pword) {
-                localStorage.setItem("address", address);
+                localStorage.setItem("address", data.address.street);
+                localStorage.setItem("city", data.address.city);
+                localStorage.setItem("state", data.address.state);
+                localStorage.setItem("country", data.address.country);
                 $window.location.href = "/map.html";
             } else {
                 alert("Invalid password");
@@ -247,8 +249,19 @@ angular.module('starter', ['ionic', 'ngCordova'])
         console.log("RegisterCtrl: changePword: Finished");
     };
     
-    $scope.registerUser = function(uname, pword, pword2, email, address) {
-        console.log("RegisterCtrl: registerUser: Entered with: " + uname + ", " + pword + ", " + pword2 + ", " + email + ", " + address);
+    $scope.registerUser = function(uname, pword, pword2, email, address, city, state, country) {
+        console.log("RegisterCtrl: registerUser: Entered with: " + uname + ", " + pword + ", " + pword2 + ", " + email + ", " + address + ", " + city + ", " + state + ", " + country);
+        
+        if (uname == null) {
+            alert("Username is required");
+            return;
+        }
+        
+        if (pword == null) {
+            alert("Password is required");
+            return;
+        }
+        
         if (pword != pword2) {
             alert("RegisterCtrl: registerUser: Passwords do not match");
             return;
@@ -261,12 +274,18 @@ angular.module('starter', ['ionic', 'ngCordova'])
                 name : uname,
                 password : pword,
                 email : email,
-                address : address
+                address : {street : address,
+                           city : city,
+                           state : state,
+                           country : country}
             }),
             contentType : 'Application/json'
         })
         .success(function() {
             localStorage.setItem("address", address);
+            localStorage.setItem("city", city);
+            localStorage.setItem("state", state);
+            localStorage.setItem("country", country);
             console.log("RegisterCtrl: registerUser: User is registered");
             $window.location.href = "/map.html";
         })
