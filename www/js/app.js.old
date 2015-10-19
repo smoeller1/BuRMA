@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic', 'ngCordova'])
+angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -40,7 +40,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
             console.log("TodoCtrl: initialize: Location determined to be " + lat + ", " + long);
             var site = new google.maps.LatLng(lat, long);
             console.log("TodoCtrl: initialize: getCurrentPosition: " + site.lat() + ", " + site.lng());
-            if (localStorage.getItem("address") == 'undefined') {
+            if (localStorage.getItem("address") == null) {
                 $scope.startLoc = site.lat() + ", " + site.lng();
             } else {
                 $scope.startLoc = localStorage.getItem("address") + ", " + localStorage.getItem("city") + ", " + localStorage.getItem("state") + ", " + localStorage.getItem("country");;
@@ -129,7 +129,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
     
 })
 
-.controller('RegisterCtrl', function($scope, $ionicPlatform, $ionicLoading, $compile, $http, $window) {
+.controller('RegisterCtrl', function($scope, $ionicPlatform, $ionicLoading, $compile, $http, $window, MongoRESTService, $state) {
     //api key : txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP
     // https://api.mongolab.com/api/1/database/quasily/collections/CS5551?apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP
     console.log("RegisterCtrl: Started controller");
@@ -166,6 +166,14 @@ angular.module('starter', ['ionic', 'ngCordova'])
     
     $scope.loginUser = function(uname, pword) {
         console.log("RegisterCtrl: loginUser: Entered with: " + uname + ", " + pword);
+        var result = MongoRESTService.login(uname, pword, function(result) {
+            console.log("RegisterCtrl: loginUser: " + result);
+            if (result.length == 1) {
+                console.log("RegisterCtrl: loginUser: login successful");
+            } else {
+                console.log("RegisterCtrl: loginUser: login failed");
+            }
+        });
         $http({
             method: 'GET',
             url : 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"password":1,"address":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
@@ -306,7 +314,23 @@ var url = "http://localhost:9080/MongoRestApp/user";
 services.factory('MongoRESTService', function($http) {
     return {
         login: function(username, password, callback) {
-            var res = $http.get(url + "?name=" + username + "&password=" + password);
+            var res = $http({
+                method: 'POST',
+                url : url,
+                data : JSON.stringify({
+                    name : username,
+                    password : password
+                }),
+                contentType : 'Application/json',
+                headers : {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Headers": "86400"
+                }
+                
+            });
+            //var res = $http.get(url + "?name=" + username + "&password=" + password);
             res.success(function(data, status, headers, config) {
                 console.log(data);
                 callback(data);

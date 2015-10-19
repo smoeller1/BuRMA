@@ -1,0 +1,80 @@
+
+    
+    
+<!DOCTYPE html>
+<html ng-app="mapper">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title>BuRMA</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js" type="application/javascript"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>  
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <link href="css/ionic.app.css" rel="stylesheet">
+    -->
+
+    <!-- ionic/angularjs js -->
+    <script src="lib/ionic/js/ionic.bundle.js"></script>
+ 
+      <script src="js/ng-cordova.min.js"></script>
+    <!-- cordova script (this will be a 404 during development) -->
+    <script src="cordova.js"></script>
+      <script src="js/angularfire.min.js"></script>
+      <script src="js/firebase.js"></script>
+
+    <!-- your app's js -->
+       <script src="js/geolocation.js"></script>
+  </head>
+    
+  <body ng-controller="TodoCtrl">
+      
+      <ion-pane>
+      <ion-content>
+    <ion-header>      
+      <div class="container" style="background-color:Lavender;">
+        <h1 align = "center" class="bg-primary" >MAPS</h1>
+            <p align = "center" id = "getname">  </p>
+      </div>
+    </ion-header>
+
+    <br/>
+    <div class = "container" style="background-color:Lavender;">
+        <form class="form-inline" role="form">
+             <div class="form-group">
+            <label class="control-label col-sm-4" for="Source">Source</label>
+            <div class="col-sm-4">
+                <input type="" class="form-control" ng-model="startLoc" placeholder="Enter Source">
+            </div>
+            </div>
+            
+            <div class="form-group">
+            <label class="control-label col-sm-5" for="Destination">Destionation</label>
+            <div class="col-sm-4">
+                <input type="" class="form-control" ng-model="endLoc" placeholder="Enter Destination">
+            </div>
+            </div>
+            
+            <div class="form-group">        
+            <div class="col-sm-offset-4 col-sm-2">
+                <button ng-click="calcRoute(startLoc, endLoc)" class="btn btn-primary btn-sm, pull-right">Get Route</button>
+            </div>
+            </div>
+            <a href="changepasswd.html">Update Password &nbsp;&nbsp;&nbsp;&nbsp;</a>
+            <a href="remove.html">Delete Account</a>
+          <span data-ng-bind="routingError"></span><br>
+          
+          <div id="map" data-tap-disabled="true"></div>
+    </form>
+    </div>  
+    </ion-content>
+    </ion-pane>
+      <script src="js/maps.js"></script>
+  </body>
+</html>    
+

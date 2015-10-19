@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title>MAPS</title>
+      
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <link href="css/ionic.app.css" rel="stylesheet">
+    -->
+
+    <!-- ionic/angularjs js -->
+    <script src="lib/ionic/js/ionic.bundle.js"></script>
+
+    <!-- cordova script (this will be a 404 during development) -->
+
+
+    <!-- your app's js -->
+    <script src="js/app.js"></script>
+      
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js" type="application/javascript"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
+  </head>
+    
+  <body>
+      
+      <ion-pane>
+    
+    <ion-content>
+    <div class="container" style="background-color:Lavender;">
+    <h1 align = "center" class="bg-primary" >MAPS</h1></div>
+
+<div class="container" style="background-color:lavender;">
+
+<div ng-app="myApp" ng-controller="formCtrl">
+
+  <h1 >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   Delete Account</h1>
+  <form class="form-horizontal">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="username">User Name:</label>
+      <div class="col-sm-4">
+        <input type="" class="form-control" ng-model="uname" placeholder="Enter User Name">
+      </div>
+    </div>
+    
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="pwd">Password:</label>
+      <div class="col-sm-4">          
+        <input type="password" class="form-control" ng-model="pwd" placeholder="Enter password">
+      </div>
+    </div>
+      
+    <div class="form-group">        
+      <div class="col-sm-offset-4 col-sm-2">
+        <button ng-click="remove(uname,pwd)" class="btn btn-primary btn-sm, pull-right">Delete </button>
+        <button ahref = "mapshome.html" class="btn btn-primary btn-sm, pull-right">cancel </button>
+      </div>
+    </div>
+  </form>
+</div>
+    
+        </div>
+      </ion-content>
+    </ion-pane>
+  </body>
+</html>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
     <title>BuRMA</title>
 
+      <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -41,7 +42,7 @@
               <span class="input-label">End</span>
               <input type="text" ng-model="endLoc" placeholder="End location: UM-Columbia">
           </label>
-          <a id="btn" ng-click="calcRoute(startLoc, endLoc)">Go</a><br>
+          <a id="btn" class="button" ng-click="calcRoute(startLoc, endLoc)">Go</a><br>
           <span data-ng-bind="routingError"></span><br>
           
           <div id="map" data-tap-disabled="true"></div>
