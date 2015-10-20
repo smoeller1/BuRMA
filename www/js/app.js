@@ -1,5 +1,49 @@
 // Ionic Starter App
 
+var services = angular.module("mongoapp.services", []);
+var url = "http://localhost:9080/MongoRestApp/user";
+
+services.factory('MongoRESTService', function($http) {
+    return {
+        login: function(username, password, callback) {
+            var res = $http({
+                method: 'POST',
+                url : url,
+                data : JSON.stringify({
+                    name : username,
+                    password : password
+                }),
+                contentType : 'Application/json',
+                headers : {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Headers": "86400"
+                }
+                
+            });
+            //var res = $http.get(url + "?name=" + username + "&password=" + password);
+            res.success(function(data, status, headers, config) {
+                console.log(data);
+                callback(data);
+            });
+            res.error(function(data, status, headers, config) {
+                console.log(data);
+            });
+        },
+        register: function(user) {
+            console.log(user);
+            var res = $http.post(url, user);
+            res.success(function(data, status, headers, config) {
+                console.log(data);
+            });
+            res.error(function(data, status, headers, config) {
+                console.log(data);
+            });
+        }
+    }
+});
+
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
@@ -18,7 +62,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
   });
 })
 
-.controller('TodoCtrl', function($scope, $cordovaGeolocation, $ionicPlatform, $ionicLoading, $compile) {
+.controller('TodoCtrl', function($scope, $cordovaGeolocation, $ionicPlatform, $ionicLoading, $compile, $http) {
     
     var directionsService = new google.maps.DirectionsService();
     var directionsDisplay = new google.maps.DirectionsRenderer();
@@ -78,6 +122,18 @@ angular.module('starter', ['ionic', 'ngCordova'])
   
       google.maps.event.addDomListener(window, 'load', $scope.initialize);
 
+    $scope.getWeather = function(city, state) {
+        console.log("TodoCtrl: getWeather: started with " + city + ", " + state);
+        $http.get('http://api.wunderground.com/api/36b799dc821d5836/conditions/q/' + state + '/' + city + '.json')
+        .success(function(data) {
+            console.log("TodoCtrl: getWeather: temp is " + data.current_observation.temp_c);
+            $scope.sourceTemp = city + ", " + state + " is " + data.current_observation.temp_c + "C";
+        })
+        .error(function() {
+            console.log("TodoCtrl: getWeather: error with $http.get");
+        });
+        console.log("TodoCtrl: getWeather: finished");
+    };
     
     $scope.centerOnMe = function() {
         console.log("TodoCtrl: centerOnMe: Entered function");
@@ -110,6 +166,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
                 directionsDisplay.setMap(map);
                 directionsDisplay.setDirections(response);
                 console.log(status);
+                $scope.getWeather(localStorage.getItem("city"), localStorage.getItem("state"));
             } else {
                 return false;
             }

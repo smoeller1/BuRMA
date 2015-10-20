@@ -42,13 +42,17 @@
               <span class="input-label">End</span>
               <input type="text" ng-model="endLoc" placeholder="End location: UM-Columbia">
           </label>
-          <a id="btn" class="button" ng-click="calcRoute(startLoc, endLoc)">Go</a><br>
+          <a id="btn" class="btn btn-primary" ng-click="calcRoute(startLoc, endLoc)">Go</a><br>
           <span data-ng-bind="routingError"></span><br>
           
           <div id="map" data-tap-disabled="true"></div>
+          
+          <div>
+              <span data-ng-bind="sourceTemp"></span>
+          </div>
       </ion-content>
         <ion-footer-bar class="bar-dark">
-        Map - <a href="index.html">Home</a>
+            Map - <a href="index.html">Home</a>
     </ion-footer-bar>
     </ion-pane>
   </body>

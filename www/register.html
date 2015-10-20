@@ -5,6 +5,7 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
     <title>BuRMA</title>
 
+      <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -66,7 +67,7 @@
               <span class="input-label">Country</span>
               <input type="text" ng-model="country" placeholder="United States">
           </label>
-          <a id="btn" class="button" ng-click="registerUser(username, password, password2, email, address, city, state, country)">Register</a><br>
+          <a id="btn" class="btn btn-primary" ng-click="registerUser(username, password, password2, email, address, city, state, country)">Register</a><br>
           <div>* = required fields</div>
 
       </ion-content>
