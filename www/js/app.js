@@ -6,48 +6,87 @@ var url = "http://localhost:9080/MongoRestApp/user";
 services.factory('MongoRESTService', function($http) {
     return {
         login: function(username, password, callback) {
-            var res = $http({
-                method: 'POST',
-                url : url,
-                data : JSON.stringify({
-                    name : username,
-                    password : password
-                }),
-                contentType : 'Application/json',
-                headers : {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET",
-                    "Access-Control-Allow-Headers": "Content-Type",
-                    "Access-Control-Allow-Headers": "86400"
-                }
-                
-            });
-            //var res = $http.get(url + "?name=" + username + "&password=" + password);
+            console.log("MongoRESTService: login: started");
+            var res = $http.get(url+"?requesttype=1&username="+username+"&password="+password);
             res.success(function(data, status, headers, config) {
-                console.log(data);
+                console.log("MongoRESTService: login: Success: " + data);
                 callback(data);
             });
             res.error(function(data, status, headers, config) {
-                console.log(data);
+                console.log("MongoRESTService: login: Error: " + data);
             });
-        },
-        register: function(user) {
-            console.log(user);
-            var res = $http.post(url, user);
+        }, // end login
+        register: function(username, password, password2, email, address, city, state, country, callback) {
+            console.log("MongoRESTService: register: started");
+            var res = $http({
+                method: 'POST',
+                url : url + "?requesttype=2&username="+username+"&password="+password,
+                data: JSON.stringify({
+                    password2: password,
+                    email: email,
+                    address: {
+                        streetaddress: address,
+                        city: city,
+                        state: state,
+                        country: country
+                    }
+                }),
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "POST",
+                    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+                    "Access-Control-Max-Age": "86400"
+                }
+            });
             res.success(function(data, status, headers, config) {
-                console.log(data);
+                console.log("MongoRESTService: register: Success: "+data);
+                callback(data);
             });
             res.error(function(data, status, headers, config) {
-                console.log(data);
+                console.log("MongoRESTService: register: Error: "+data);
             });
-        }
+        }, //end register
+        changePassword: function(username, password, newpassword, callback) {
+            console.log("MongoRESTService: changePassword: started");
+            var res = $http({
+                method: 'POST',
+                url : url + "?requesttype=3&username="+username+"&password="+password,
+                data: JSON.stringify({
+                    newpassword: newpassword
+                }),
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "POST",
+                    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+                    "Access-Control-Max-Age": "86400"
+                }
+            });
+            res.success(function(data, status, headers, config) {
+                console.log("MongoRESTService: changePassword: Success: "+data);
+                callback(data);
+            });
+            res.error(function(data, status, headers, config) {
+                console.log("MongoRESTService: changePassword: Error: "+data);
+            });
+        }, //end changePassword
+        deleteAccount: function(username, password, callback) {
+            console.log("MongoRESTService: deleteAccount: started");
+            var res = $http.get(url+"?requesttype=4&username="+username+"&password="+password);
+            res.success(function(data, status, headers, config) {
+                console.log("MongoRESTService: deleteAccount: Success: " + data);
+                callback(data);
+            });
+            res.error(function(data, status, headers, config) {
+                console.log("MongoRESTService: deleteAccount: Error: " + data);
+            });
+        } //end deleteAccount
     }
 });
 
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic', 'ngCordova'])
+angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -186,60 +225,39 @@ angular.module('starter', ['ionic', 'ngCordova'])
     
 })
 
-.controller('RegisterCtrl', function($scope, $ionicPlatform, $ionicLoading, $compile, $http, $window) {
+.controller('RegisterCtrl', function($scope, $ionicPlatform, $ionicLoading, MongoRESTService, $compile, $http, $window) {
     //api key : txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP
     // https://api.mongolab.com/api/1/database/quasily/collections/CS5551?apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP
     console.log("RegisterCtrl: Started controller");
     
     $scope.removeUser = function(uname, pword) {
         console.log("RegisterCtrl: removeUser: Entered with: " + uname + ", " + pword);
-        $http({
-            method: 'GET',
-            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"password":1,"_id":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
-        })
-        .success(function(data) {
-            console.log("RegisterCtrl: removeUser: Found "+data.password+", "+data._id.$oid);
-            if (data.password == pword) {
-                $http({
-                    method: 'DELETE',
-                    url: 'https://api.mongolab.com/api/1/databases/quasily/collections/'+data._id.$oid+'?apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
-                    async: true
-                })
-                .success(function() {
-                    $scope.displayRMsg = "User "+uname+" has been removed";
-                })
-                .error(function() {
-                    alert("Failed to remove user");
-                });
+        var result = MongoRESTService.deleteAccount(uname, pword, function(result) {
+            console.log("RegisterCtrl: removeUser: Results: "+result);
+            if (angular.fromJson(result).status == 'SUCCESS') {
+                console.log("RegisterCtrl: removeUser: Account deleted");
+                $window.location.href = "/index.html";
             } else {
-                alert("Invalid password");
+                console.log("RegisterCtrl: removeUser: Failed");
+                alert("Account delete failed");
             }
-        })
-        .error(function() {
-            alert('Failed to find user '+uname);
         });
         console.log("RegisterCtrl: removeUser: Finished");
     };
     
     $scope.loginUser = function(uname, pword) {
         console.log("RegisterCtrl: loginUser: Entered with: " + uname + ", " + pword);
-        $http({
-            method: 'GET',
-            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"password":1,"address":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
-        })
-        .success(function(data) {
-            if (data.password == pword) {
-                localStorage.setItem("address", data.address.street);
-                localStorage.setItem("city", data.address.city);
-                localStorage.setItem("state", data.address.state);
-                localStorage.setItem("country", data.address.country);
+        var result = MongoRESTService.login(uname, pword, function(result) {
+            console.log("RegisterCtrl: loginUser: Results: "+result);
+            if (angular.fromJson(result).status == 'SUCCESS') {
+                console.log("RegisterCtrl: loginUser: Login success");
+                localStorage.setItem("email", angular.fromJson(result).email);
+                localStorage.setItem("username", uname);
                 $window.location.href = "/map.html";
             } else {
-                alert("Invalid password");
+                console.log("RegisterCtrl: loginUser: Failed login");
+                alert("Login failed");
             }
-        })
-        .error(function() {
-            alert('Failed to authenticate user '+uname);
         });
         console.log("RegisterCtrl: loginUser: Finished");
     };
@@ -277,31 +295,16 @@ angular.module('starter', ['ionic', 'ngCordova'])
             alert('New passwords do not match');
             return;
         }
-        $http({
-            method: 'GET',
-            url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"password":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
-        })
-        .success(function(dat) {
-            if (dat.password == oldpass) {
-                $http({
-                    method: 'PUT',
-                    url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
-                    data: JSON.stringify({ "$set" : { "password": newpass } }),
-                    contentType: 'Application/json'
-                })
-                .success(function() {
-                    $scope.displayMsg = "Password changed";
-                })
-                .error(function() {
-                    alert('Failed to update password');
-                });
-                        
+        
+        var result = MongoRESTService.changePassword(uname, oldpass, newpass, function(result) {
+            console.log("RegisterCtrl: changePword: Results: "+result);
+            if (angular.fromJson(result).status == 'SUCCESS') {
+                console.log("RegisterCtrl: changePword: Password changed");
+                $window.location.href = "/map.html";
             } else {
-                alert('Old password is invalid');
+                console.log("RegisterCtrl: changePword: Failed to change");
+                alert("Password change failed");
             }
-        })
-        .error(function() {
-            alert('Failed to authenticate existing info for ' + uname);
         });
         console.log("RegisterCtrl: changePword: Finished");
     };
@@ -324,63 +327,24 @@ angular.module('starter', ['ionic', 'ngCordova'])
             return;
         };
         
-        $http({
-            method: 'POST',
-            url : 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
-            data: JSON.stringify({
-                name : uname,
-                password : pword,
-                email : email,
-                address : {street : address,
-                           city : city,
-                           state : state,
-                           country : country}
-            }),
-            contentType : 'Application/json'
-        })
-        .success(function() {
-            localStorage.setItem("address", address);
-            localStorage.setItem("city", city);
-            localStorage.setItem("state", state);
-            localStorage.setItem("country", country);
-            console.log("RegisterCtrl: registerUser: User is registered");
-            $window.location.href = "/map.html";
-        })
-        .error(function() {
-            alert("RegisterCtrl: registerUser: Failed to register user");
+        var result = MongoRESTService.register(uname, pword, pword2, email, address, city, state, country, function(result) {
+            console.log("RegisterCtrl: registerUser: Results: "+result);
+            if (angular.fromJson(result).status == 'SUCCESS') {
+                console.log("RegisterCtrl: registerUser: Login success");
+                localStorage.setItem("email", email);
+                localStorage.setItem("username", uname);
+                localStorage.setItem("address", address);
+                localStorage.setItem("city", city);
+                localStorage.setItem("state", state);
+                localStorage.setItem("country", country);
+                $window.location.href = "/map.html";
+            } else {
+                console.log("RegisterCtrl: registerUser: Failed login");
+                alert("Login failed");
+            }
         });
         console.log("RegisterCtrl: registerUser: Finished");
     };
     
     console.log("RegisterCtrl: End of controller");
-});
-
-
-
-var services = angular.module("mongoapp.services", []);
-var url = "http://localhost:9080/MongoRestApp/user";
-
-services.factory('MongoRESTService', function($http) {
-    return {
-        login: function(username, password, callback) {
-            var res = $http.get(url + "?name=" + username + "&password=" + password);
-            res.success(function(data, status, headers, config) {
-                console.log(data);
-                callback(data);
-            });
-            res.error(function(data, status, headers, config) {
-                console.log(data);
-            });
-        },
-        register: function(user) {
-            console.log(user);
-            var res = $http.post(url, user);
-            res.success(function(data, status, headers, config) {
-                console.log(data);
-            });
-            res.error(function(data, status, headers, config) {
-                console.log(data);
-            });
-        }
-    }
 });
