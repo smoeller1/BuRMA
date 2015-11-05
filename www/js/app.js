@@ -1,7 +1,8 @@
 // Ionic Starter App
 
 var services = angular.module("mongoapp.services", []);
-var url = "http://localhost:9080/MongoRestApp/user";
+//var url = "http://localhost:9080/MongoRestApp/user";
+var url = "http://mongorestapp.mybluemix.net/user";
 
 
 //Factory use
@@ -32,13 +33,13 @@ services.factory('MongoRESTService', function($http) {
                         state: state,
                         country: country
                     }
-                }),
+                }) /*,
                 headers: {
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Methods": "POST",
                     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
                     "Access-Control-Max-Age": "86400"
-                }
+                } */
             });
             res.success(function(data, status, headers, config) {
                 console.log("MongoRESTService: register: Success: "+data);
@@ -243,7 +244,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             return {
                 log: function(loglvl, message){
                     if (loglvl <= currentLogLvl) {
-                        console.log(message);
+                        console.log(loglvl+": "+message);
                     }
                 },
                 publicVariableOne : "Public"
@@ -369,6 +370,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             if (angular.fromJson(result).status == 'SUCCESS') {
                 Log.log(5, "RegisterCtrl: registerUser: Login success");
                 var aUser = new endUser();
+                //augment(endUser, Mixin);
                 aUser.setLocalStorage(email, uname, address, city, state, country);
                 $window.location.href = "/map.html";
             } else {
@@ -382,6 +384,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     function endUser(){
         Log.log(6, "RegisterCtrl: endUser: started");
     };
+    //augment(endUser, Mixin);
     
     Log.log(6, "RegisterCtrl: End of controller");
 });
@@ -403,6 +406,4 @@ Mixin.prototype = {
         console.log("Mixin: getLocation");
     }
 };
-
-augment(endUser, Mixin);
 
