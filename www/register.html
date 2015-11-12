@@ -36,20 +36,32 @@
       <ion-content>
           <h2>Register</h2>
           <label class="item item-input">
-              <span class="input-label">Username*</span>
+              <span class="input-label">Username</span>
               <input type="text" ng-model="username" placeholder="Username">
           </label>
           <label class="item item-input">
-              <span class="input-label">Password*</span>
+              <span class="input-label">Password</span>
               <input type="password" ng-model="password" placeholder="Password">
           </label>
           <label class="item item-input">
-              <span class="input-label">Repeat password*</span>
+              <span class="input-label">Repeat password</span>
               <input type="password" ng-model="password2" placeholder="Password">
           </label>
           <label class="item item-input">
-              <span class="input-label">Email*</span>
+              <span class="input-label">First Name</span>
+              <input type="text" ng-model="fname" placeholder="First name">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Last name</span>
+              <input type="text" ng-model="lname" placeholder="Last name">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Email</span>
               <input type="text" ng-model="email" placeholder="user@mail.com">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Mobile number</span>
+              <input type="tel" ng-model="mobilenum" placeholder="816-555-1234">
           </label>
           <label class="item item-input">
               <span class="input-label">Home address</span>
@@ -67,7 +79,7 @@
               <span class="input-label">Country</span>
               <input type="text" ng-model="country" placeholder="United States">
           </label>
-          <a id="btn" class="btn btn-primary" ng-click="registerUser(username, password, password2, email, address, city, state, country)">Register</a><br>
+          <a id="btn" class="btn btn-primary" ng-click="registerUser(username, password, password2, fname, lname, email, mobilenum, address, city, state, country)">Register</a><br>
           <div>* = required fields</div>
 
       </ion-content>

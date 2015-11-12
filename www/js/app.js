@@ -1,80 +1,101 @@
 // Ionic Starter App
 
 var services = angular.module("mongoapp.services", []);
-//var url = "http://localhost:9080/MongoRestApp/user";
 var url = "http://mongorestapp.mybluemix.net/user";
-
 
 //Factory use
 services.factory('MongoRESTService', function($http) {
     return {
         login: function(username, password, callback) {
             console.log("MongoRESTService: login: started");
-            var res = $http.get(url+"?requesttype=1&username="+username+"&password="+password);
+            var res = $http({
+                url: url,
+                method: 'POST',
+                data: JSON.stringify({
+                    RequestType: 2,
+                    Password: password,
+                    Username: username
+                })
+            });
             res.success(function(data, status, headers, config) {
-                console.log("MongoRESTService: login: Success: " + data);
+                console.log("MongoRESTService: login: Success: " + data.StatusReason);
                 callback(data);
             });
             res.error(function(data, status, headers, config) {
-                console.log("MongoRESTService: login: Error: " + data);
+                console.log("MongoRESTService: login: Error: " + data.StatusReason);
             });
         }, // end login
-        register: function(username, password, password2, email, address, city, state, country, callback) {
+        register: function(username, password, fname, lname, email, mobilenum, address, city, state, country, callback) {
             console.log("MongoRESTService: register: started");
             var res = $http({
                 method: 'POST',
-                url : url + "?requesttype=2&username="+username+"&password="+password,
+                url : url,
                 data: JSON.stringify({
-                    password2: password,
-                    email: email,
-                    address: {
-                        streetaddress: address,
-                        city: city,
-                        state: state,
-                        country: country
+                    Password: password,
+                    Username: username,
+                    FirstName: fname,
+                    LastName: lname,
+                    EmailAddress: email,
+                    MobileNumber: mobilenum,
+                    RequestType: 1,
+                    HomeAddress: {
+                        StreetAddress: address,
+                        City: city,
+                        State: state,
+                        Country: country
                     }
-                }) /*,
-                headers: {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "POST",
-                    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-                    "Access-Control-Max-Age": "86400"
-                } */
+                })
             });
             res.success(function(data, status, headers, config) {
-                console.log("MongoRESTService: register: Success: "+data);
+                console.log("MongoRESTService: register: Success: "+data.toString());
                 callback(data);
             });
             res.error(function(data, status, headers, config) {
                 console.log("MongoRESTService: register: Error: "+data);
             });
         }, //end register
-        changePassword: function(username, password, newpassword, callback) {
+        updateAccount: function(username, password, newpassword, fname, lname, email, mobilenum, address, city, state, country, callback) {
+            //TODO change any calling functions that use this
             console.log("MongoRESTService: changePassword: started");
             var res = $http({
                 method: 'POST',
-                url : url + "?requesttype=3&username="+username+"&password="+password,
+                url : url,
                 data: JSON.stringify({
-                    newpassword: newpassword
-                }),
-                headers: {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "POST",
-                    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-                    "Access-Control-Max-Age": "86400"
-                }
+                    Password: password,
+                    Username: username,
+                    NewPassword: newpassword,
+                    FirstName: fname,
+                    LastName: lname,
+                    EmailAddress: email,
+                    MobileNumber: mobilenum,
+                    RequestType: 3,
+                    HomeAddress: {
+                        StreetAddress: address,
+                        City: city,
+                        State: state,
+                        Country: country
+                    }
+                })
             });
             res.success(function(data, status, headers, config) {
-                console.log("MongoRESTService: changePassword: Success: "+data);
+                console.log("MongoRESTService: updateAccount: Success: "+data);
                 callback(data);
             });
             res.error(function(data, status, headers, config) {
-                console.log("MongoRESTService: changePassword: Error: "+data);
+                console.log("MongoRESTService: updateAccount: Error: "+data);
             });
-        }, //end changePassword
+        }, //end updateAccount
         deleteAccount: function(username, password, callback) {
             console.log("MongoRESTService: deleteAccount: started");
-            var res = $http.get(url+"?requesttype=4&username="+username+"&password="+password);
+            var res = $http({
+                url: url,
+                method: 'POST',
+                data: JSON.stringify({
+                    RequestType: 4,
+                    Password: password,
+                    Username: username
+                })
+            });
             res.success(function(data, status, headers, config) {
                 console.log("MongoRESTService: deleteAccount: Success: " + data);
                 callback(data);
@@ -82,7 +103,27 @@ services.factory('MongoRESTService', function($http) {
             res.error(function(data, status, headers, config) {
                 console.log("MongoRESTService: deleteAccount: Error: " + data);
             });
-        } //end deleteAccount
+        }, //end deleteAccount
+        getDirections: function(startAddress, endAddress, waypoint, callback) {
+            console.log("MongoRESTService: getDirections: started");
+            var res = $http({
+                url: url,
+                method: 'POST',
+                data: JSON.stringify({
+                    RequestType: 10,
+                    RouteStartAddress: startAddress,
+                    RouteEndAddress: endAddress,
+                    WaypointAddress: waypoint
+                })
+            });
+            res.success(function(data, status, headers, config) {
+                console.log("MongoRESTService: getDirections: Success: " + data);
+                callback(data);
+            });
+            res.error(function(data, status, headers, config) {
+                console.log("MongoRESTService: getDirections: Error: "+ data);
+            });
+        } //end getDirections
     }
 });
 
@@ -112,6 +153,35 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     var map;
     var mapOptions;
     var posOptions = {timeout: 10000, enableHighAccuracy: false};
+    
+        //Singleton log function
+    var Log = (function() {
+        var instance;
+        function init() {
+            function privateMethodOne(){
+                console.log("privateMethodOne");
+            }
+            var currentLogLvl = 6;  //Log level: 7 is highest, 1 is lowest, 5 is default
+            return {
+                log: function(loglvl, message){
+                    if (loglvl <= currentLogLvl) {
+                        console.log(loglvl+": "+message);
+                    }
+                },
+                publicVariableOne : "Public"
+            };
+        };
+        return {
+            getInstance: function() {
+                if (!instance) {
+                    instance = init();
+                }
+                return instance;
+            }
+        };
+    })();
+    
+    var Log = new Log.getInstance();
     
     $scope.initialize = function() {
         Log.log(5, "TodoCtrl: initialize: Entered initialize function");
@@ -202,6 +272,10 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     
     $scope.calcRoute = function(start, end) {
         console.log("TodoCtrl: calcRoute: Entered function");
+        var result = MongoRESTService.getDirections(start, end, null, function(result) {
+            //The result object is a JSON object of Google Maps directions directives
+            console.log("TodoCtrl: calcRoute: Received result JSON object, need to display it");
+        };
         var request = $scope.setRequest(start, end);
         
         directionsService.route(request, function(response, status) {
@@ -267,8 +341,8 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     $scope.removeUser = function(uname, pword) {
         Log.log(6, "RegisterCtrl: removeUser: Entered with: " + uname + ", " + pword);
         var result = MongoRESTService.deleteAccount(uname, pword, function(result) {
-            Log.log(6, "RegisterCtrl: removeUser: Results: "+result);
-            if (angular.fromJson(result).status == 'SUCCESS') {
+            Log.log(6, "RegisterCtrl: removeUser: Results: "+result.Status+": "+result.StatusReason);
+            if (result.Status == '1') {
                 Log.log(5, "RegisterCtrl: removeUser: Account deleted");
                 $window.location.href = "/index.html";
             } else {
@@ -282,11 +356,12 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     $scope.loginUser = function(uname, pword) {
         Log.log(6, "RegisterCtrl: loginUser: Entered with: " + uname + ", " + pword);
         var result = MongoRESTService.login(uname, pword, function(result) {
-            Log.log(6, "RegisterCtrl: loginUser: Results: "+result);
-            if (angular.fromJson(result).status == 'SUCCESS') {
+            Log.log(6, "RegisterCtrl: loginUser: Results: "+result.Status+": "+result.StatusReason);
+            if (result.Status == '1') {
                 Log.log(5, "RegisterCtrl: loginUser: Login success");
-                localStorage.setItem("email", angular.fromJson(result).email);
-                localStorage.setItem("username", uname);
+                var aUser = new endUser();
+                augment(endUser, Mixin);
+                aUser.setLocalStorage(result.EmailAddress, uname, result.HomeAddress.StreetAddress, result.HomeAddress.City, result.HomeAddress.State, result.HomeAddress.Country);
                 $window.location.href = "/map.html";
             } else {
                 Log.log(3, "RegisterCtrl: loginUser: Failed login");
@@ -347,7 +422,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
         Log.log(6, "RegisterCtrl: changePword: Finished");
     };
     
-    $scope.registerUser = function(uname, pword, pword2, email, address, city, state, country) {
+    $scope.registerUser = function(uname, pword, pword2, fname, lname, email, mobilenum, address, city, state, country) {
         Log.log(6, "RegisterCtrl: registerUser: Entered with: " + uname + ", " + pword + ", " + pword2 + ", " + email + ", " + address + ", " + city + ", " + state + ", " + country);
         
         if (uname == null) {
@@ -364,13 +439,12 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             alert("RegisterCtrl: registerUser: Passwords do not match");
             return;
         };
-        
-        var result = MongoRESTService.register(uname, pword, pword2, email, address, city, state, country, function(result) {
-            Log.log(6, "RegisterCtrl: registerUser: Results: "+result);
-            if (angular.fromJson(result).status == 'SUCCESS') {
+        var result = MongoRESTService.register(uname, pword, fname, lname, email, mobilenum, address, city, state, country, function(result) {
+            Log.log(6, "RegisterCtrl: registerUser: Results: "+result.Status+": "+result.StatusReason);
+            if (result.Status == '1') {
                 Log.log(5, "RegisterCtrl: registerUser: Login success");
                 var aUser = new endUser();
-                //augment(endUser, Mixin);
+                augment(endUser, Mixin);
                 aUser.setLocalStorage(email, uname, address, city, state, country);
                 $window.location.href = "/map.html";
             } else {
@@ -384,7 +458,6 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     function endUser(){
         Log.log(6, "RegisterCtrl: endUser: started");
     };
-    //augment(endUser, Mixin);
     
     Log.log(6, "RegisterCtrl: End of controller");
 });
@@ -406,4 +479,29 @@ Mixin.prototype = {
         console.log("Mixin: getLocation");
     }
 };
+
+function augment( receivingClass, givingClass ) {
+    // only provide certain methods
+    if ( arguments[2] ) {
+        for ( var i = 2, len = arguments.length; i < len; i++ ) {
+            receivingClass.prototype[arguments[i]] = givingClass.prototype[arguments[i]];
+        }
+    }
+    // provide all methods
+    else {
+        for ( var methodName in givingClass.prototype ) {
+            // check to make sure the receiving class doesn't
+            // have a method of the same name as the one currently
+            // being processed
+            if ( !Object.hasOwnProperty.call(receivingClass.prototype, methodName) ) {
+                receivingClass.prototype[methodName] = givingClass.prototype[methodName];
+            }
+
+            // Alternatively (check prototype chain as well):
+            // if ( !receivingClass.prototype[methodName] ) {
+            //      receivingClass.prototype[methodName] = givingClass.prototype[methodName];
+            // }
+        }
+    }
+}
 
