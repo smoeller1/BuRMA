@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.servlets.CrossOriginFilter;
+
 import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONObject;
 import com.mongodb.BasicDBObject;
@@ -27,6 +29,7 @@ import com.mongodb.WriteResult;
 @WebServlet("/user")
 public class UserServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	CrossOriginFilter cors = new CrossOriginFilter();
         
     /**
      * @see HttpServlet#HttpServlet()
@@ -49,7 +52,35 @@ public class UserServlet extends HttpServlet {
     	}
     	System.out.println("UserServlet: runDbQuery: Finished");
     }
-
+    
+    private void authenticateUser(JSONObject returnObj, DBCollection users, JSONObject postData) {
+    	System.out.println("UserServlet: authenticateUser: Starting");
+		if (checkNullUP(postData)) {
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "Username and password are required");
+			return;
+		}
+		
+		BasicDBObject queryObj = new BasicDBObject("name", postData.get("Username"));
+		BasicDBObject queryResults = new BasicDBObject();
+		runDbQuery(users, queryObj, queryResults);
+		
+		if (queryResults.get("password").toString().equals(postData.get("Password"))) {
+			System.out.println("UserServlet: authenticateUser: User successfully authenticated");
+			returnObj.put("Status", 1);
+			returnObj.put("StatusReason", "User authenticated");
+			returnObj.put("HomeAddress", queryResults.get("HomeAddress").toString());
+			returnObj.put("OfficeAddress", queryResults.get("OfficeAddress").toString());
+			returnObj.put("EmailAddress", queryResults).get("EmailAddress").toString());
+			returnObj.put("MobileNumber", queryResults).get("MobileNumber").toString());
+		} else {
+			System.out.println("UserServlet: authenticateUser: User failed authentication: "
+					+ queryResults.get("password").toString() + " != " + postData.get("password"));
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "invalid password");
+		}
+		System.out.println("UserServlet: authenticateUser: Finished");
+    }
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -101,11 +132,7 @@ public class UserServlet extends HttpServlet {
 				case "4":
 					deleteAccount(returnObj, users, postData);
 					break;
-				case "5":
-					forgotPassword(returnObj, users, postData);
-					break;
 				case "10":
-					getDirections(returnObj, users, postData);
 					break;
 				default:
 					returnObj.put("Status", 2);
@@ -123,93 +150,6 @@ public class UserServlet extends HttpServlet {
 		response.getWriter().append(returnObj.toString());
 	}
 
-	private void getDirections(JSONObject returnObj, DBCollection users, JSONObject postData) {
-		// TODO Auto-generated method stub
-		if (postData.get("RouteStartAddress") == null) {
-			returnObj.put("Status", 0);
-			returnObj.put("StatusReason", "No starting address");
-			return;
-		}
-		if (postData.get("RouteEndAddress") == null) {
-			returnObj.put("Status",  0);
-			returnObj.put("StatusReason", "No ending address");
-			return;
-		}
-		GetDirections directions = new GetDirections(postData.get("RouteStartAddress").toString(), postData.get("RouteEndAddress").toString());
-		if (postData.get("WaypointAddress") != null) {
-			directions.setWaypoint(postData.get("WaypointAddress").toString());
-		}
-		try {
-			JSONObject routeMap = directions.getDirections();
-			returnObj.put("Route", routeMap);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	private void forgotPassword(JSONObject returnObj, DBCollection users, JSONObject postData) {
-		if (postData.get("Username") == null) {
-			returnObj.put("Status", 0);
-			returnObj.put("StatusReason", "No username included");
-			return;
-		}
-		if (postData.get("EmailAddress") == null) {
-			returnObj.put("Status", 0);
-			returnObj.put("StatusReason", "No email address included");
-		}
-		
-		BasicDBObject queryObj = new BasicDBObject("Username", postData.get("Username"));
-		BasicDBObject queryResults = new BasicDBObject();
-		runDbQuery(users, queryObj, queryResults);
-		
-		if (queryResults.get("EmailAddress").toString().isEmpty()) {
-			returnObj.put("Status", 0);
-			returnObj.put("StatusReason", "No email address on file for user");
-			return;
-		}
-		
-		String msg = "Password for user "+postData.get("Username").toString()+" is "+queryResults.get("Password").toString();
-		emailUser(queryResults.get("EmailAddress").toString(), msg);
-		
-		returnObj.put("Status", 1);
-		returnObj.put("StatusReason", "Password emailed");
-	}
-    
-    private void emailUser(String string, String msg) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void authenticateUser(JSONObject returnObj, DBCollection users, JSONObject postData) {
-    	System.out.println("UserServlet: authenticateUser: Starting");
-		if (checkNullUP(postData)) {
-			returnObj.put("Status", 0);
-			returnObj.put("StatusReason", "Username and password are required");
-			return;
-		}
-		
-		BasicDBObject queryObj = new BasicDBObject("Username", postData.get("Username"));
-		BasicDBObject queryResults = new BasicDBObject();
-		runDbQuery(users, queryObj, queryResults);
-		
-		if (queryResults.get("Password").toString().equals(postData.get("Password"))) {
-			System.out.println("UserServlet: authenticateUser: User successfully authenticated");
-			returnObj.put("Status", 1);
-			returnObj.put("StatusReason", "User authenticated");
-			returnObj.put("HomeAddress", queryResults.get("HomeAddress").toString());
-			returnObj.put("OfficeAddress", queryResults.get("OfficeAddress").toString());
-			returnObj.put("EmailAddress", queryResults.get("EmailAddress").toString());
-			returnObj.put("MobileNumber", queryResults.get("MobileNumber").toString());
-		} else {
-			System.out.println("UserServlet: authenticateUser: User failed authentication: "
-					+ queryResults.get("Password").toString() + " != " + postData.get("Password"));
-			returnObj.put("Status", 0);
-			returnObj.put("StatusReason", "invalid password");
-		}
-		System.out.println("UserServlet: authenticateUser: Finished");
-    }
-    
 	private void deleteAccount(JSONObject returnObj, DBCollection users, JSONObject postData) {
 		System.out.println("UserServlet: deleteAccount: Starting");
 		if (checkNullUP(postData)) {
@@ -228,7 +168,7 @@ public class UserServlet extends HttpServlet {
 			return;
 		}
 		
-		BasicDBObject search = new BasicDBObject("Username", postData.get("Username").toString());
+		BasicDBObject search = new BasicDBObject("name", postData.get("Username").toString());
 		WriteResult result = users.remove(search);
 		returnObj.put("Status", 1);
 		returnObj.put("StatusReason", "Account deleted");
@@ -261,34 +201,12 @@ public class UserServlet extends HttpServlet {
 			updateValues.put("Password", postData.get("NewPassword"));
 		}
 		if (postData.get("HomeAddress") != null) {
-			try {
-				JSONObject address = (JSONObject) JSON.parse(postData.get("HomeAddress").toString());
-				updateValues.put("HomeAddress",  address);
-			} catch (NullPointerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			JSONObject address = (JSONObject) JSON.parse(postData.get("HomeAddress").toString());
+			updateValues.put("HomeAddress",  address);
 		}
 		if (postData.get("OfficeAddress") != null) {
-			try {
-				JSONObject address = (JSONObject) JSON.parse(postData.get("OfficeAddress").toString());
-				updateValues.put("OfficeAddress", address);
-			} catch (NullPointerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		if (postData.get("EmailAddress") != null) {
-			updateValues.put("EmailAddress",  postData.get("EmailAddress"));
-		}
-		if (postData.get("MobileNumber") != null) {
-			updateValues.put("MobileNumber", postData.get("MobileNumber"));
+			JSONObject address = (JSONObject) JSON.parse(postData.get("OfficeAddress").toString());
+			updateValues.put("OfficeAddress", address);
 		}
 		
 		if (updateValues.isEmpty()) {
@@ -297,7 +215,7 @@ public class UserServlet extends HttpServlet {
 			return;
 		}
 		
-		BasicDBObject search = new BasicDBObject("Username", postData.get("Username").toString());
+		BasicDBObject search = new BasicDBObject("name", postData.get("Username").toString());
 		BasicDBObject update = new BasicDBObject("$set", updateValues);
 		WriteResult result = users.update(search, update);
 		returnObj.put("Status", 1);
@@ -313,7 +231,7 @@ public class UserServlet extends HttpServlet {
 			System.out.println("UserServlet: checkNullUP: Username is null");
 			return true;
 		}
-		if (postData.get("Password") == null) {
+		if (postData.get("password") == null) {
 			System.out.println("UserServlet: checkNullUP: Password is null");
 			return true;
 		}
@@ -329,14 +247,12 @@ public class UserServlet extends HttpServlet {
 			return;
 		}
 		
-		BasicDBObject queryObj = new BasicDBObject("Username", postData.get("Username").toString());
+		BasicDBObject queryObj = new BasicDBObject("name", postData.get("Username").toString());
 		BasicDBObject queryResults = new BasicDBObject();
 		runDbQuery(users, queryObj, queryResults);
 		if (queryResults.isEmpty()) {
 			BasicDBObject insert = new BasicDBObject("Username", postData.get("Username").toString());
 			insert.put("Password", postData.get("Password").toString());
-			insert.put("EmailAddress", postData.get("EmailAddress").toString());
-			insert.put("MobileNumber", postData.get("MobileNumber").toString());
 			if (postData.get("HomeAddress") != null) {
 				System.out.println("UserServlet: createNewUser: Home Address is included");
 				try {
@@ -379,15 +295,5 @@ public class UserServlet extends HttpServlet {
 		// TODO Auto-generated method stub
 		doGet(request, response);
 	}
-	
-	public void doOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-	    //The following are CORS headers. Max age informs the 
-	    //browser to keep the results of this call for 1 day.
-	    resp.setHeader("Access-Control-Allow-Origin", "*");
-	    resp.setHeader("Access-Control-Allow-Methods", "GET, POST");
-	    resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
-	    resp.setHeader("Access-Control-Max-Age", "86400");
-	    //Tell the browser what requests we allow.
-	    resp.setHeader("Allow", "GET, HEAD, POST, TRACE, OPTIONS");
-	}
+
 }
