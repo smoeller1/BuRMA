@@ -5,6 +5,7 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
     <title>BuRMA</title>
 
+      <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -26,17 +27,17 @@
        <script src="js/geolocation.js"></script>
   <script src="js/app.js"></script>
   </head>
-  <body ng-controller="RegisterCtrl">
+  <body ng-controller="RegisterCtrl" ng-init='initializeModAccount()'>
 
     <ion-pane>
-      <ion-header-bar class="bar-dark">
+      <ion-header-bar class="bar-positive">
         <h1 class="title">BuRMA</h1>
       </ion-header-bar>
       <ion-content>
           <h2>Change Password</h2>
           <label class="item item-input">
               <span class="input-label">Username</span>
-              <input type="text" ng-model="username" placeholder="Username">
+              <input type="text" ng-model="username" placeholder="{{Username}}">
           </label>
           <label class="item item-input">
               <span class="input-label">Old Password</span>
@@ -50,12 +51,59 @@
               <span class="input-label">Repeat Password</span>
               <input type="password" ng-model="newpass2" placeholder="NewPassword">
           </label>
-          <a id="btn" class="button" ng-click="changePword(username, oldpassword, newpass, newpass2)">Change password</a><br>
+        <label class="item item-input">
+              <span class="input-label">First Name</span>
+              <input type="text" ng-model="fname" placeholder="{{FirstName}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Last name</span>
+              <input type="text" ng-model="lname" placeholder="{{LastName}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Email</span>
+              <input type="text" ng-model="email" placeholder="{{UserMailCom}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Mobile number</span>
+              <input type="tel" ng-model="mobilenum" placeholder="{{MobileNumber}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Home address</span>
+              <input type="text" ng-model="address" placeholder="{{MyStreet}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">City</span>
+              <input type="text" ng-model="city" placeholder="{{Anytown}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">State</span>
+              <input type="text" ng-model="state" placeholder="{{StateMO}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label">Country</span>
+              <input type="text" ng-model="country" placeholder="{{UnitedStates}}">
+          </label>
+          <label class="item item-input">
+              <span class="input-label" for="sel1">Language</span>
+              <select name="language" class="form-control" id="sel1">
+                  <option value="en" selected>English</option>
+                  <option value="es">Espanol</option>
+                  <option value="fr">Francais</option>
+              </select>
+          </label>
+          <label class="item item-input">
+              <span class="input-label" for="sel2">Route preference</span>
+              <select name="routepref" class="form-control" id="sel2">
+                  <option value="1" selected>Shortest distance</option>
+                  <option value="2">Shortest time</option>
+              </select>
+          </label>
+          <a id="btn" class="button" ng-click="ModifyAccount(username, oldpassword, newpass, newpass2, fname, lname, email, mobilenum, address, city, state, country, language, routepref)">Modify Account</a><br>
           <span data-ng-bind="displayMsg"></span><br>
 
       </ion-content>
-        <ion-footer-bar class="bar-dark">
-            Change Password - <a href="index.html">Home</a>
+        <ion-footer-bar class="bar-positive">
+            Modify Account - <a href="index.html"><span class="glyphicon glyphicon-home"></span></a>
     </ion-footer-bar>
     </ion-pane>
   </body>

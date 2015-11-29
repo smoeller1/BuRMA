@@ -25,7 +25,7 @@ services.factory('MongoRESTService', function($http) {
                 console.log("MongoRESTService: login: Error: " + data.StatusReason);
             });
         }, // end login
-        register: function(username, password, fname, lname, email, mobilenum, address, city, state, country, callback) {
+        register: function(username, password, fname, lname, email, mobilenum, address, city, state, country, language, routepref, callback) {
             console.log("MongoRESTService: register: started");
             var res = $http({
                 method: 'POST',
@@ -43,7 +43,9 @@ services.factory('MongoRESTService', function($http) {
                         City: city,
                         State: state,
                         Country: country
-                    }
+                    },
+                    Language: language,
+                    RoutePref: routepref
                 })
             });
             res.success(function(data, status, headers, config) {
@@ -54,7 +56,7 @@ services.factory('MongoRESTService', function($http) {
                 console.log("MongoRESTService: register: Error: "+data);
             });
         }, //end register
-        updateAccount: function(username, password, newpassword, fname, lname, email, mobilenum, address, city, state, country, callback) {
+        updateAccount: function(username, password, newpassword, fname, lname, email, mobilenum, address, city, state, country, language, routepref, callback) {
             //TODO change any calling functions that use this
             console.log("MongoRESTService: changePassword: started");
             var res = $http({
@@ -74,7 +76,9 @@ services.factory('MongoRESTService', function($http) {
                         City: city,
                         State: state,
                         Country: country
-                    }
+                    },
+                    Language: language,
+                    RoutePref: routepref
                 })
             });
             res.success(function(data, status, headers, config) {
@@ -117,15 +121,41 @@ services.factory('MongoRESTService', function($http) {
                 })
             });
             res.success(function(data, status, headers, config) {
-                console.log("MongoRESTService: getDirections: Success: " + data);
+                console.log("MongoRESTService: getDirections: Success: " + data.Status + ": " + data.StatusReason);
                 callback(data);
             });
             res.error(function(data, status, headers, config) {
-                console.log("MongoRESTService: getDirections: Error: "+ data);
+                console.log("MongoRESTService: getDirections: Error: "+ data.Status + ": " + data.StatusReason);
             });
-        } //end getDirections
+        }, //end getDirections
+        translate: function(targetLanguage, text, callback) {
+            console.log("MongoRESTService: translate: started from en to " + targetLanguage);
+            if (targetLanguage == 'null') {
+                targetLanguage = 'en';
+                console.log("MongoRESTService: translate: language null, setting to en");
+            }
+            var res = $http({
+                url: url,
+                method: 'POST',
+                data: JSON.stringify({
+                    RequestType: 15,
+                    Translate: {
+                        SrcLang: 'en',
+                        TargLang: targetLanguage,
+                        SrcTxt: text
+                    }
+                })
+            });
+            res.success(function(data, status, headers, config) {
+                console.log("MongoRESTService: translate: Success: " + data.Status + ": " + data.StatusReason);
+                callback(data);
+            });
+            res.error(function(data, status, headers, config) {
+                console.log("MongoRESTService: translate: Error: " + data.Status + ": " + data.StatusReason);
+            });
+        } //end translate
     }
-});
+});  //end MongoRESTService
 
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
@@ -145,9 +175,9 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
   });
 })
 
-.controller('TodoCtrl', function($scope, $cordovaGeolocation, $ionicPlatform, $ionicLoading, $compile, $http) {
+.controller('TodoCtrl', function($scope, $cordovaGeolocation, $ionicPlatform, $ionicLoading, $compile, $http, MongoRESTService) {
     
-    
+    $scope.Math = window.Math;
     var directionsService = new google.maps.DirectionsService();
     var directionsDisplay = new google.maps.DirectionsRenderer();
     var map;
@@ -189,14 +219,33 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
         var lat;
         var long;
         var end = new google.maps.LatLng(0, 0);
+        
+        if (localStorage.getItem("language") != 'undefined') {
+            var result = MongoRESTService.translate(localStorage.getItem("language"), 'Start', function(result) {
+                console.log("TodoCtrl: initialize: Translated Start to " + result.TranslatedTxt);
+                $scope.startLocalized = result.TranslatedTxt;
+            });
+            result = MongoRESTService.translate(localStorage.getItem("language"), 'End', function(result) {
+                console.log("TodoCtrl: initialize: Translated End to " + result.TranslatedTxt);
+                $scope.endLocalized = result.TranslatedTxt;
+            });
+            result = MongoRESTService.translate(localStorage.getItem("language"), 'Go', function(result) {
+                console.log("TodoCtrl: initialize: Translated Go to " + result.TranslatedTxt);
+                $scope.goLocalized = result.TranslatedTxt;
+            });
+        } else {
+            $scope.startLocalized = "Start";
+            $scope.endLocalized = "End";
+            $scope.goLocalized = "Go";
+        }
       
         $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
-            console.log("TodoCtrl: initialize: Entered getCurrentPosition within initialize");
+            Log.log(5, "TodoCtrl: initialize: Entered getCurrentPosition within initialize");
             lat = position.coords.latitude
             long = position.coords.longitude
-            console.log("TodoCtrl: initialize: Location determined to be " + lat + ", " + long);
+            Log.log(5, "TodoCtrl: initialize: Location determined to be " + lat + ", " + long);
             var site = new google.maps.LatLng(lat, long);
-            console.log("TodoCtrl: initialize: getCurrentPosition: " + site.lat() + ", " + site.lng());
+            Log.log(5, "TodoCtrl: initialize: getCurrentPosition: " + site.lat() + ", " + site.lng());
             if (localStorage.getItem("address") == 'undefined') {
                 $scope.startLoc = site.lat() + ", " + site.lng();
             } else {
@@ -234,19 +283,6 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
       }; //initialize
   
       google.maps.event.addDomListener(window, 'load', $scope.initialize);
-
-    $scope.getWeather = function(city, state) {
-        console.log("TodoCtrl: getWeather: started with " + city + ", " + state);
-        $http.get('http://api.wunderground.com/api/36b799dc821d5836/conditions/q/' + state + '/' + city + '.json')
-        .success(function(data) {
-            console.log("TodoCtrl: getWeather: temp is " + data.current_observation.temp_c);
-            $scope.sourceTemp = city + ", " + state + " is " + data.current_observation.temp_c + "C";
-        })
-        .error(function() {
-            console.log("TodoCtrl: getWeather: error with $http.get");
-        });
-        console.log("TodoCtrl: getWeather: finished");
-    };
     
     $scope.centerOnMe = function() {
         console.log("TodoCtrl: centerOnMe: Entered function");
@@ -274,16 +310,31 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
         console.log("TodoCtrl: calcRoute: Entered function");
         var result = MongoRESTService.getDirections(start, end, null, function(result) {
             //The result object is a JSON object of Google Maps directions directives
-            console.log("TodoCtrl: calcRoute: Received result JSON object, need to display it");
-        };
+            console.log("TodoCtrl: calcRoute: Received results (" + result.Status + "), totalTime: "+result.TotalTime);
+            console.log("TodoCtrl: calcRoute: JSON Object: "+result.Status+", "+result.StatusReason);
+            $scope.weather = result.WeatherInfo;
+            if (localStorage.getItem("language") == 'en'
+               || localStorage.getItem("language") == 'undefined') {
+                $scope.startWeather = "Current weather: " + result.WeatherInfo[0].temp_f + "F and " + result.WeatherInfo[0].icon;
+                $scope.endWeather = "Current weather: " + result.WeatherInfo[2].temp_f + "F and " + result.WeatherInfo[2].icon;
+            } else {
+                var result = MongoRESTService.translate(localStorage.getItem("language"), "Current weather: " + result.WeatherInfo[0].temp_c + "C and " + result.WeatherInfo[0].icon, function(result) {
+                    console.log("TodoCtrl: initialize: Translated Start to " + result.TranslatedTxt);
+                    $scope.startWeather = result.TranslatedTxt;
+                });
+                result = MongoRESTService.translate(localStorage.getItem("language"), "Current weather: " + result.WeatherInfo[2].temp_c + "C and " + result.WeatherInfo[2].icon, function(result) {
+                    console.log("TodoCtrl: initialize: Translated Start to " + result.TranslatedTxt);
+                    $scope.endWeather = result.TranslatedTxt;
+                });
+            }
+        });
         var request = $scope.setRequest(start, end);
         
         directionsService.route(request, function(response, status) {
             if (status === google.maps.DirectionsStatus.OK) {
                 directionsDisplay.setMap(map);
                 directionsDisplay.setDirections(response);
-                console.log(status);
-                $scope.getWeather(localStorage.getItem("city"), localStorage.getItem("state"));
+                console.log("TodoCtrl: calcRoute: directionService.route: "+status);
             } else {
                 return false;
             }
@@ -338,6 +389,38 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     var Log = new Log.getInstance();
     Log.log(6, "RegisterCtrl: Started controller");
     
+    $scope.initializeModAccount = function() {
+        Log.log(6, "RegisterCtrl: initialize: Started");
+        if (localStorage.getItem("username") != 'undefined') {
+            $scope.Username = localStorage.getItem("username");
+        }
+        if (localStorage.getItem("email") != 'undefined') {
+            $scope.UserMailCom = localStorage.getItem("email");
+        }
+        if (localStorage.getItem("address") != 'undefined') {
+            $scope.MyStreet = localStorage.getItem("address");
+        }
+        if (localStorage.getItem("city") != 'undefined') {
+            $scope.AnyTown = localStorage.getItem("city");
+        }
+        if (localStorage.getItem("state") != 'undefined') {
+            $scope.StateMO = localStorage.getItem("state");
+        }
+        if (localStorage.getItem("country") != 'undefined') {
+            $scope.UnitedStates = localStorage.getItem("country");
+        }
+        if (localStorage.getItem("firstname") != 'undefined') {
+            $scope.FirstName = localStorage.getItem("firstname");
+        }
+        if (localStorage.getItem("lastname") != 'undefined') {
+            $scope.LastName = localStorage.getItem("lastname");
+        }
+        if (localStorage.getItem("mobilenum") != 'undefined') {
+            $scope.MobileNumber = localStorage.getItem("mobilenum");
+        }
+        Log.log(6, "RegisterCtrl: Initialize: End");
+    };  //initialize
+    
     $scope.removeUser = function(uname, pword) {
         Log.log(6, "RegisterCtrl: removeUser: Entered with: " + uname + ", " + pword);
         var result = MongoRESTService.deleteAccount(uname, pword, function(result) {
@@ -351,7 +434,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             }
         });
         Log.log(6, "RegisterCtrl: removeUser: Finished");
-    };
+    }; //removeUser
     
     $scope.loginUser = function(uname, pword) {
         Log.log(6, "RegisterCtrl: loginUser: Entered with: " + uname + ", " + pword);
@@ -369,37 +452,25 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             }
         });
         Log.log(6, "RegisterCtrl: loginUser: Finished");
-    };
+    }; //loginUser
     
-    $scope.changeEmail = function(uname, pword, newemail) {
-        Log.log(6, "RegisterCtrl: changeEmail: Entered with: " + uname + ", " + pword + ", " + newemail);
-        $http({
-            method: 'GET',
-            url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&f={"_id":1}&fo=true&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP'
-        })
-        .success(function(dat) {
-            Log.log(5, "RegisterCtrl: changeEmail: found user");
-                $http({
-                    method: 'PUT',
-                    url: 'https://api.mongolab.com/api/1/databases/quasily/collections/burmaUsers?q={"name":"'+uname+'"}&apiKey=txrusPCK4DZrtU0mq2_bsKgxb2FgvGyP',
-                    data: JSON.stringify({ "$set" : { "email": newemail } }),
-                    contentType: 'Application/json'
-                })
-                .success(function() {
-                    $scope.displayEMsg = "Email changed";
-                    Log.log(5, "Email changed");
-                })
-                .error(function() {
-                    Log.log(3, "Failed to update email");
-                    alert('Failed to update email');
-                });
-        })
-        .error(function() {
-            Log.log(3, "Failed to find user");
-            alert('Failed to find existing info for ' + uname);
+    $scope.ModifyAccount = function(uname, oldpass, newpass, newpass2, fname, lname, email, mobilenum, address, city, state, country, language, routepref) {
+        Log.log(6, "RegisterCtrl: ModifyAccount: started");
+        
+        var result = MongoRESTService.updateAccount(uname, oldpass, fname, lname, email, mobilenum, address, city, state, country, language, routepref, function(result) {
+            Log.log(6, "RegisterCtrl: ModifyAccount: updated account");
         });
-        Log.log(6, "RegisterCtrl: changeEmail: Finished");
-    };
+        
+        if (newpass != null) {
+            //Assume the user is wanting to change their password since they entered a new one
+            changePword(uname, oldpass, newpass, newpass2);
+        }
+        
+        var aUser = new endUser();
+        augment(endUser, Mixin);
+        aUser.setLocalStorage(email, uname, address, city, state, country, language, routepref, fname, lname, mobilenum);
+        $window.location.href = "/map.html";
+    }; //ModifyAccount
     
     $scope.changePword = function(uname, oldpass, newpass, newpass2) {
         Log.log(6, "RegisterCtrl: changePword: Entered with: " + uname + ", " + oldpass + ", " + newpass + ", " + newpass2);
@@ -420,10 +491,10 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             }
         });
         Log.log(6, "RegisterCtrl: changePword: Finished");
-    };
+    }; //changePword
     
-    $scope.registerUser = function(uname, pword, pword2, fname, lname, email, mobilenum, address, city, state, country) {
-        Log.log(6, "RegisterCtrl: registerUser: Entered with: " + uname + ", " + pword + ", " + pword2 + ", " + email + ", " + address + ", " + city + ", " + state + ", " + country);
+    $scope.registerUser = function(uname, pword, pword2, fname, lname, email, mobilenum, address, city, state, country, language, routepref) {
+        Log.log(6, "RegisterCtrl: registerUser: Entered with: " + uname + ", " + pword + ", " + pword2 + ", " + email + ", " + address + ", " + city + ", " + state + ", " + country + "; " + language + ", " + routepref);
         
         if (uname == null) {
             alert("Username is required");
@@ -439,13 +510,13 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             alert("RegisterCtrl: registerUser: Passwords do not match");
             return;
         };
-        var result = MongoRESTService.register(uname, pword, fname, lname, email, mobilenum, address, city, state, country, function(result) {
+        var result = MongoRESTService.register(uname, pword, fname, lname, email, mobilenum, address, city, state, country, language, routepref, function(result) {
             Log.log(6, "RegisterCtrl: registerUser: Results: "+result.Status+": "+result.StatusReason);
             if (result.Status == '1') {
                 Log.log(5, "RegisterCtrl: registerUser: Login success");
                 var aUser = new endUser();
                 augment(endUser, Mixin);
-                aUser.setLocalStorage(email, uname, address, city, state, country);
+                aUser.setLocalStorage(email, uname, address, city, state, country, language, routepref, fname, lname, mobilenum);
                 $window.location.href = "/map.html";
             } else {
                 Log.log(3, "RegisterCtrl: registerUser: Failed login");
@@ -466,14 +537,45 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
 //Mixin use
 var Mixin = function() {}
 Mixin.prototype = {
-    setLocalStorage: function(email, uname, address, city, state, country){
+    setLocalStorage: function(email, uname, address, city, state, country, language, routepref, fname, lname, mobilenum){
         console.log("Mixin: setLocalStorage");
-                localStorage.setItem("email", email);
-                localStorage.setItem("username", uname);
-                localStorage.setItem("address", address);
-                localStorage.setItem("city", city);
-                localStorage.setItem("state", state);
-                localStorage.setItem("country", country);
+        if (email != 'undefined') {
+            localStorage.setItem("email", email);
+        }
+        if (uname != 'undefined') {
+            localStorage.setItem("username", uname);
+        }
+        if (address != 'undefined') {
+            localStorage.setItem("address", address);
+        }
+        if (city != 'undefined') {
+            localStorage.setItem("city", city);
+        }
+        if (state != 'undefined') {
+            localStorage.setItem("state", state);
+        }
+        if (country != 'undefined') {
+            localStorage.setItem("country", country);
+        }
+        if (language == 'undefined') {
+            localStorage.setItem("language", "en");
+        } else {
+            localStorage.setItem("language", language);
+        }
+        if (routepref == 'undefined') {
+            localStorage.setItem("routepref", "1");
+        } else {
+            localStorage.setItem("routepref", routepref);
+        }
+        if (fname != 'undefined') {
+            localStorage.setItem("firstname", fname);
+        }
+        if (lname != 'undefined') {
+            localStorage.setItem("lastname", lname);
+        }
+        if (mobilenum != 'undefined') {
+            localStorage.setItem("mobilenum", mobilenum);
+        }
     },
     getLocation: function(){
         console.log("Mixin: getLocation");
