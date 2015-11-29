@@ -11,7 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ibm.json.java.JSON;
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.watson.developer_cloud.language_translation.v2.LanguageTranslation;
+import com.ibm.watson.developer_cloud.language_translation.v2.model.TranslationResult;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -104,8 +107,14 @@ public class UserServlet extends HttpServlet {
 				case "5":
 					forgotPassword(returnObj, users, postData);
 					break;
+				case "6":
+					lockUser(returnObj, users, postData);
+					break;
 				case "10":
 					getDirections(returnObj, users, postData);
+					break;
+				case "15":
+					translateTxt(returnObj, users, postData);
 					break;
 				default:
 					returnObj.put("Status", 2);
@@ -123,8 +132,102 @@ public class UserServlet extends HttpServlet {
 		response.getWriter().append(returnObj.toString());
 	}
 
+	private void translateTxt(JSONObject returnObj, DBCollection users, JSONObject postData) {
+		if (postData.get("Translate") == null) {
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "No Translate object to translate");
+			return;
+		}
+		JSONObject translateSrc = (JSONObject) postData.get("Translate");
+		if (translateSrc.get("SrcTxt") == null) {
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "No text to translate");
+			return;
+		}
+		if (translateSrc.get("SrcLang") == null) {
+			System.out.println("UserServlet: translateTxt: No SrcLang, defaulting to en");
+			translateSrc.put("SrcLang", "en");
+		}
+		if (translateSrc.get("TargLang") == null) {
+			System.out.println("UserServlet: translateTxt: No TargLang, defaulting to es");
+			translateSrc.put("TargLang", "es");
+		}
+		if (translateSrc.get("SrcLang").equals(translateSrc.get("TargLang"))) {
+			System.out.println("UserServlet: translateTxt: Target & source languages the same, skipping translation");
+			returnObj.put("TranslatedTxt", translateSrc.get("SrcTxt").toString());
+			returnObj.put("Status", 1);
+			returnObj.put("StatusReason", "Text translation complete");
+			return;
+		}
+		System.out.println("UserServlet: translateTxt: Source text: "+translateSrc.get("SrcTxt").toString());
+		System.out.println("UserServlet: translateTxt: From "+translateSrc.get("SrcLang").toString()+" to "+translateSrc.get("TargLang").toString());
+		LanguageTranslation service = new LanguageTranslation();
+		service.setUsernameAndPassword("e682a5dd-a97d-44d8-aed4-7ac157997afa", "ybEmySKTpsS5");
+		TranslationResult translationResult = service.translate(translateSrc.get("SrcTxt").toString(), translateSrc.get("SrcLang").toString(), translateSrc.get("TargLang").toString());
+		System.out.println("UserServlet: translateTxt: Translated txt: "+translationResult.getTranslations().toString());
+		try {
+			JSONArray tmpArr = (JSONArray) JSONArray.parse(translationResult.getTranslations().toString());
+			String translatedTxt = "";
+			java.util.ListIterator tmpArrIter = tmpArr.listIterator();
+			while (tmpArrIter.hasNext()) {
+				JSONObject translatedOne = (JSONObject) tmpArrIter.next();
+				translatedTxt += " "+translatedOne.get("translation").toString();
+			}
+			returnObj.put("TranslatedTxt", translatedTxt);
+			returnObj.put("Status", 1);
+			returnObj.put("StatusReason", "Text translation complete");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void getWeather(JSONObject returnObj, JSONObject fullRoute) {
+		if (fullRoute == null) {
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "Driving route information not available");
+			return;
+		}
+		if (fullRoute.isEmpty()) {
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "Driving route information not available");
+			return;
+		}
+		GetWeather weather = new GetWeather(fullRoute);
+		try {
+			weather.parseDirections(returnObj);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void lockUser(JSONObject returnObj, DBCollection users, JSONObject postData) {
+		if (postData.get("Username") == null) {
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "No username included");
+			return;
+		}
+		
+		BasicDBObject queryObj = new BasicDBObject("Username", postData.get("Username"));
+		BasicDBObject queryResults = new BasicDBObject();
+		runDbQuery(users, queryObj, queryResults);
+		
+		if (queryResults.get("Username").toString().isEmpty()) {
+			returnObj.put("Status", 0);
+			returnObj.put("StatusReason", "Username does not exist");
+			return;
+		}
+		
+		BasicDBObject updateValues = new BasicDBObject();
+		updateValues.put("accountLocked", "1");
+		
+		BasicDBObject update = new BasicDBObject("$set", updateValues);
+		WriteResult result = users.update(queryObj, update);
+		returnObj.put("Status", 1);
+		returnObj.put("StatusReason", "Account locked");
+	}
+
 	private void getDirections(JSONObject returnObj, DBCollection users, JSONObject postData) {
-		// TODO Auto-generated method stub
+		JSONObject fullRoute = new JSONObject();
 		if (postData.get("RouteStartAddress") == null) {
 			returnObj.put("Status", 0);
 			returnObj.put("StatusReason", "No starting address");
@@ -140,12 +243,14 @@ public class UserServlet extends HttpServlet {
 			directions.setWaypoint(postData.get("WaypointAddress").toString());
 		}
 		try {
-			JSONObject routeMap = directions.getDirections();
+			JSONObject routeMap = directions.getDirections(fullRoute);
+			System.out.println("UserServlet: getDirections: fullRoute size: "+fullRoute.size());
 			returnObj.put("Route", routeMap);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println("UserServlet: getDirections: Calling getWeather with: "+returnObj.size()+" and "+fullRoute.size());
+		getWeather(returnObj, fullRoute);
 	}
 
 	private void forgotPassword(JSONObject returnObj, DBCollection users, JSONObject postData) {
@@ -178,7 +283,6 @@ public class UserServlet extends HttpServlet {
     
     private void emailUser(String string, String msg) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	private void authenticateUser(JSONObject returnObj, DBCollection users, JSONObject postData) {
@@ -192,15 +296,39 @@ public class UserServlet extends HttpServlet {
 		BasicDBObject queryObj = new BasicDBObject("Username", postData.get("Username"));
 		BasicDBObject queryResults = new BasicDBObject();
 		runDbQuery(users, queryObj, queryResults);
-		
+		if (queryResults.containsKey("accountLocked")) {
+			if (queryResults.get("accountLocked").toString().equals("1")) {
+				returnObj.put("Status", 0);
+				returnObj.put("StatusReason", "User account is locked");
+				return;
+			}
+		}
 		if (queryResults.get("Password").toString().equals(postData.get("Password"))) {
 			System.out.println("UserServlet: authenticateUser: User successfully authenticated");
 			returnObj.put("Status", 1);
 			returnObj.put("StatusReason", "User authenticated");
-			returnObj.put("HomeAddress", queryResults.get("HomeAddress").toString());
-			returnObj.put("OfficeAddress", queryResults.get("OfficeAddress").toString());
-			returnObj.put("EmailAddress", queryResults.get("EmailAddress").toString());
-			returnObj.put("MobileNumber", queryResults.get("MobileNumber").toString());
+			if (queryResults.containsKey("HomeAddress")) {
+				returnObj.put("HomeAddress", queryResults.get("HomeAddress").toString());
+			}
+			if (queryResults.containsKey("OfficeAddress")) {
+				returnObj.put("OfficeAddress", queryResults.get("OfficeAddress").toString());
+			}
+			if (queryResults.containsKey("EmailAddress")) {
+				returnObj.put("EmailAddress", queryResults.get("EmailAddress").toString());
+			}
+			if (queryResults.containsKey("MobileNumber")) {
+				returnObj.put("MobileNumber", queryResults.get("MobileNumber").toString());
+			}
+			if (queryResults.containsKey("Language")) {
+				returnObj.put("Language", queryResults.get("Language").toString());
+			} else {
+				returnObj.put("Language", "en");
+			}
+			if (queryResults.containsKey("RoutePref")) {
+				returnObj.put("RoutePref", queryResults.get("RoutePref").toString());
+			} else {
+				returnObj.put("RoutePref", "1");
+			}
 		} else {
 			System.out.println("UserServlet: authenticateUser: User failed authentication: "
 					+ queryResults.get("Password").toString() + " != " + postData.get("Password"));
@@ -265,10 +393,8 @@ public class UserServlet extends HttpServlet {
 				JSONObject address = (JSONObject) JSON.parse(postData.get("HomeAddress").toString());
 				updateValues.put("HomeAddress",  address);
 			} catch (NullPointerException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -277,10 +403,8 @@ public class UserServlet extends HttpServlet {
 				JSONObject address = (JSONObject) JSON.parse(postData.get("OfficeAddress").toString());
 				updateValues.put("OfficeAddress", address);
 			} catch (NullPointerException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -289,6 +413,12 @@ public class UserServlet extends HttpServlet {
 		}
 		if (postData.get("MobileNumber") != null) {
 			updateValues.put("MobileNumber", postData.get("MobileNumber"));
+		}
+		if (postData.get("Language") != null) {
+			updateValues.put("Language", postData.get("Language"));
+		}
+		if (postData.get("RoutePref") != null) {
+			updateValues.put("RoutePref", postData.get("RoutePref"));
 		}
 		
 		if (updateValues.isEmpty()) {
@@ -359,6 +489,17 @@ public class UserServlet extends HttpServlet {
 					e.printStackTrace();
 				}
 			}
+			if (postData.get("Language") != null) {
+				System.out.println("UserServlet: createNewUser: including language translation to " + postData.get("Language").toString());
+				insert.put("Language", postData.get("Language").toString());
+			} else {
+				insert.put("Language", "en");
+			}
+			if (postData.get("RoutePref") != null) {
+				insert.put("RoutePref", postData.get("RoutePref").toString());
+			} else {
+				insert.put("RoutePref", "1");
+			}
 			WriteResult result = users.insert(insert);
 			returnObj.put("Status", 1);
 			returnObj.put("StatusReason", "New user added");
@@ -384,7 +525,7 @@ public class UserServlet extends HttpServlet {
 	    //The following are CORS headers. Max age informs the 
 	    //browser to keep the results of this call for 1 day.
 	    resp.setHeader("Access-Control-Allow-Origin", "*");
-	    resp.setHeader("Access-Control-Allow-Methods", "GET, POST");
+	    resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
 	    resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
 	    resp.setHeader("Access-Control-Max-Age", "86400");
 	    //Tell the browser what requests we allow.

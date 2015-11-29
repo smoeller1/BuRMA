@@ -36,13 +36,14 @@ public class GetDirections {
 		this.waypoint = waypoint;
 	}
 	
-	public JSONObject getDirections() throws IOException {
+	public JSONObject getDirections(JSONObject fullRoute) throws IOException {
 		//Query Google first
 		GetGoogleDirections googleRoute = new GetGoogleDirections(startLoc, endLoc);
-		if (!waypoint.isEmpty()) {
+		if (waypoint != null) {
 			googleRoute.setWaypoint(waypoint);
 		}
-		JSONObject googleDirections = googleRoute.getDirections();
+		JSONObject googleDirections = googleRoute.getDirections(fullRoute);
+		System.out.println("GetDirections: getDirections: fullRoute size: "+fullRoute.size());
 		
 		//TODO once we add more APIs, we will have to compare to find the best route
 		
