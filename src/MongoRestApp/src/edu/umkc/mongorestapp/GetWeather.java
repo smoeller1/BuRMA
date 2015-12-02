@@ -66,6 +66,7 @@ public class GetWeather {
 		String lastLat = "";
 		String lastLng = "";
 		
+		//TODO: this is skipping extra major legs (only parses KC->STL, and ignores STL->Chicago on a KC->Chicago route)
 		while (routesArrIter.hasNext()) {
 			JSONObject thisRoute = (JSONObject) routesArrIter.next();
 			JSONArray legsArr = (JSONArray) thisRoute.get("legs");
@@ -160,7 +161,7 @@ public class GetWeather {
 			jsonData += inputData;
 		}
 		in.close();
-		System.out.println("GetWeather: getSingleWeather: Returned results: "+jsonData);
+		//System.out.println("GetWeather: getSingleWeather: Returned results: "+jsonData);
 		
 		JSONObject weatherResults = (JSONObject) JSON.parse(jsonData);
 		JSONObject currentObservation = (JSONObject) weatherResults.get("current_observation");

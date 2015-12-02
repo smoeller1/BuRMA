@@ -7,12 +7,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 
-import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.sun.xml.internal.bind.v2.runtime.reflect.ListIterator;
-
-import jdk.nashorn.internal.parser.JSONParser;
 
 public class GetGoogleDirections {
 	private String startLoc;
@@ -56,6 +52,17 @@ public class GetGoogleDirections {
 		return waypoint;
 	}
 
+	/* Returns a JSONObject of:
+	 * { "TotalTime" : (int) seconds,
+	 *   "TotalDistance" : (int) meters,
+	 *   "route" : {
+	 *              "NodeN" : {
+	 *                         "lat" : (float) latitude,
+	 *                         "lng" : (float) longitude
+	 *                        }
+	 *             }
+	 *  }
+	 */
 	public JSONObject getDirections(JSONObject mapRoute) throws IOException{
 		String startLocEnc = URLEncoder.encode(startLoc);
 		String endLocEnc = URLEncoder.encode(endLoc);
@@ -78,12 +85,12 @@ public class GetGoogleDirections {
 		in.close();
 		System.out.println("GetGoogleDirections: getDirections: finished reading remote URL");
 		
-		System.out.println("GetGoogleDirections: getDirections: jsonData: "+jsonData);
+		//System.out.println("GetGoogleDirections: getDirections: jsonData: "+jsonData);
 		if (jsonData.isEmpty()) {
 			throw new IOException("No data read from server");
 		}
 		
-		System.out.println("GetGoogleDirections: getDirections: Returned data: "+jsonData);
+		//System.out.println("GetGoogleDirections: getDirections: Returned data: "+jsonData);
 		
 		JSONObject rawRouteData = JSONObject.parse(jsonData.toString());
 		mapRoute.put("routes", rawRouteData.get("routes"));

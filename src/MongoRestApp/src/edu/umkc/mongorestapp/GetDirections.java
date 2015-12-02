@@ -8,13 +8,14 @@ public class GetDirections {
 	private String startLoc;
 	private String endLoc;
 	private String waypoint;
-	
+	private int routePref;
 	
 	
 	public GetDirections(String startLoc, String endLoc) {
 		super();
 		this.startLoc = startLoc;
 		this.endLoc = endLoc;
+		this.routePref = 1;
 	}
 	
 	public String getStartLoc() {
@@ -35,6 +36,9 @@ public class GetDirections {
 	public void setWaypoint(String waypoint) {
 		this.waypoint = waypoint;
 	}
+	public void setRoutePref(int routePref) {
+		this.routePref = routePref;
+	}
 	
 	public JSONObject getDirections(JSONObject fullRoute) throws IOException {
 		//Query Google first
@@ -43,11 +47,33 @@ public class GetDirections {
 			googleRoute.setWaypoint(waypoint);
 		}
 		JSONObject googleDirections = googleRoute.getDirections(fullRoute);
-		System.out.println("GetDirections: getDirections: fullRoute size: "+fullRoute.size());
+		System.out.println("GetDirections: getDirections: fullRoute size from Google: "+fullRoute.size());
 		
-		//TODO once we add more APIs, we will have to compare to find the best route
+		GetBingDirections bingRoute = new GetBingDirections(startLoc, endLoc);
+		if (waypoint != null) {
+			bingRoute.setWaypoint(waypoint);
+		}
+		JSONObject bingDirections = bingRoute.getDirections();
 		
-		return googleDirections;
+		System.out.println("GetDirections: getDirections: Google time: " + googleDirections.get("TotalTime") + ", Bing time: " + bingDirections.get("TotalTime"));
+		
+		if (routePref == 2) { //Need to find shortest distance
+			if (Integer.parseInt(googleDirections.get("TotalDistance").toString()) > Integer.parseInt(bingDirections.get("TotalDistance").toString())) {
+				System.out.println("GetDirections: getDirections: selecting Bing as shortest route");
+				return bingDirections;
+			} else {
+				System.out.println("GetDirections: getDirections: selecting Google as shortest route");
+				return googleDirections;
+			}
+		} else { //Default to shortest distance
+			if (Integer.parseInt(googleDirections.get("TotalTime").toString()) > Integer.parseInt(bingDirections.get("TotalTime").toString())) {
+				System.out.println("GetDirections: getDirections: selecting Bing as fastest route");
+				return bingDirections;
+			} else {
+				System.out.println("GetDirections: getDirections: selecting Google as fastest route");
+				return googleDirections;
+			}
+		}
 	}
 
 }

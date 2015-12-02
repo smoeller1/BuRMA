@@ -81,7 +81,7 @@
           </label>
           <label class="item item-input">
               <span class="input-label" for="sel1">Language</span>
-              <select name="language" class="form-control" id="sel1">
+              <select ng-model="language" class="form-control" id="sel1">
                   <option value="en" selected>English</option>
                   <option value="es">Espanol</option>
                   <option value="fr">Francais</option>
@@ -89,7 +89,7 @@
           </label>
           <label class="item item-input">
               <span class="input-label" for="sel2">Route preference</span>
-              <select name="routepref" class="form-control" id="sel2">
+              <select ng-model="routepref" class="form-control" id="sel2">
                   <option value="1" selected>Shortest distance</option>
                   <option value="2">Shortest time</option>
               </select>
