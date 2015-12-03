@@ -36,7 +36,6 @@ public class UserServlet extends HttpServlet {
      */
     public UserServlet() {
         super();
-        // TODO Auto-generated constructor stub
     }
     
     private void runDbQuery(DBCollection users, BasicDBObject queryObj, BasicDBObject results) {
@@ -244,6 +243,7 @@ public class UserServlet extends HttpServlet {
 		}
 		try {
 			JSONObject routeMap = directions.getDirections(fullRoute);
+			//TODO: find out why fullRoute.size() is 0 right now
 			System.out.println("UserServlet: getDirections: fullRoute size: "+fullRoute.size());
 			returnObj.put("Route", routeMap);
 		} catch (IOException e) {
@@ -282,7 +282,8 @@ public class UserServlet extends HttpServlet {
 	}
     
     private void emailUser(String string, String msg) {
-		// TODO Auto-generated method stub
+		// TODO Add email support
+    	System.out.println("UserServlet: emailUser: Not implemented");
 	}
 
 	private void authenticateUser(JSONObject returnObj, DBCollection users, JSONObject postData) {
@@ -517,7 +518,6 @@ public class UserServlet extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
 		doGet(request, response);
 	}
 	
