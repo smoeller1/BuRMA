@@ -33,17 +33,24 @@ public class GetBingDirections {
 	}
 	
 	/* Returns a JSONObject of:
-	 * { "TotalTime" : (int) seconds,
+	 * bingDirections : { "TotalTime" : (int) seconds,
 	 *   "TotalDistance" : (int) meters,
 	 *   "route" : {
-	 *              "NodeN" : {
+	 *              "nodeN" : {
 	 *                         "lat" : (float) latitude,
 	 *                         "lng" : (float) longitude
 	 *                        }
 	 *             }
 	 *  }
+	 *  
+	 *  mapRoute : { "TotalDistance" : (int) meters,
+	 *  			 "TotalTime" : (int) seconds,
+	 *  		     "route" : [ "TotalDistance" : (int) meters,
+	 *  			   "TotalTime" : (int) seconds,
+	 *  			   "start" : { "lat" : (float) latitude, "lng" : (float) longitude },
+	 *  			   "end" : { "lat" : (float) latitude, "lng" : (float) longitude } ] }
 	 */
-	public JSONObject getDirections() throws IOException{
+	public JSONObject getDirections(JSONObject mapRoute) throws IOException{
 		String startLocEnc = URLEncoder.encode(startLoc);
 		String endLocEnc = URLEncoder.encode(endLoc);
 		String url = "http://dev.virtualearth.net/REST/v1/Routes/Driving?key=An5k009sPgQ-Odp-SJ0ueRBn9VKH-0IhwMLAi5aFTa0iTfY4Yk7XYKzTl5nBAm1P";
@@ -76,6 +83,7 @@ public class GetBingDirections {
 		
 		JSONObject returnResults = new JSONObject();
 		JSONObject lastNode = new JSONObject();
+		JSONArray fullRoute = new JSONArray();
 		int TotalTime = 0;
 		int TotalDistance = 0;
 		JSONArray resourceArr = (JSONArray) rawRouteData.get("resourceSets");
@@ -95,19 +103,26 @@ public class GetBingDirections {
 				while (resourceArr2Iter.hasNext()) {
 					JSONObject tmpObj = (JSONObject) resourceArr2Iter.next();
 					System.out.println("GetBingDirections: getDirections: processing an individual node");
-					if (!returnResults.containsKey("Node0")) {
-						JSONObject thisLeg = (JSONObject) tmpObj.get("actualStart");
-						assignNodeGps(thisLeg, returnResults, 0);
-					}
-					JSONObject end = (JSONObject) tmpObj.get("actualEnd");
-					JSONObject start = (JSONObject) tmpObj.get("actualStart");
 					lastNode = (JSONObject) tmpObj.get("actualEnd");
+					JSONObject start = (JSONObject) tmpObj.get("actualStart");
+					if (!returnResults.containsKey("Node0")) {
+						assignNodeGps(start, returnResults, 0);
+					}
+					JSONObject tmpFullRoute = new JSONObject();
+					tmpFullRoute.put("start", convertGPSArrayToObject(start));
+					tmpFullRoute.put("end", convertGPSArrayToObject(lastNode));
+					tmpFullRoute.put("TotalDistance", (int) Float.parseFloat(tmpObj.get("travelDistance").toString()) * 1000);
+					tmpFullRoute.put("TotalTime", Integer.parseInt(tmpObj.get("travelDuration").toString()));
+					fullRoute.add(tmpFullRoute);
 				}
 			}
 		}
 		assignNodeGps(lastNode, returnResults, 1);
 		returnResults.put("TotalTime", TotalTime);
 		returnResults.put("TotalDistance", TotalDistance);
+		mapRoute.put("TotalTime", TotalTime);
+		mapRoute.put("TotalDistance", TotalDistance);
+		mapRoute.put("route", fullRoute);
 		return returnResults;
 	}
 	

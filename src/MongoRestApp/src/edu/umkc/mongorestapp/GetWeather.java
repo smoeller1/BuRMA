@@ -45,10 +45,17 @@ public class GetWeather {
 	 *     extremeEvent: (optional) if there is an extreme event, like tornado, this element will be populated with details
 	 *   }
 	 * ]
+	 * 
+	 * 	 directions : { "TotalDistance" : (int) meters,
+	 *  			 "TotalTime" : (int) seconds,
+	 *  		     "route" : [ "TotalDistance" : (int) meters,
+	 *  			   "TotalTime" : (int) seconds,
+	 *  			   "start" : { "lat" : (float) latitude, "lng" : (float) longitude },
+	 *  			   "end" : { "lat" : (float) latitude, "lng" : (float) longitude } ] }
 	 */
 	public void parseDirections(JSONObject returnObj) throws IOException {
 		JSONArray weatherInfo = new JSONArray();
-		int weatherInfoC = 0;
+		int weatherInfoC = 0;  //count number of weather points saved
 		
 		int totalTime = Integer.parseInt((String) directions.get("TotalTime").toString());
 		
@@ -58,7 +65,7 @@ public class GetWeather {
 			legTime = 1;
 		}
 		
-		JSONArray routesArr = (JSONArray) directions.get("routes");
+		JSONArray routesArr = (JSONArray) directions.get("route");
 		java.util.ListIterator routesArrIter = routesArr.listIterator();
 		int secondsSinceLast = 0;
 		
@@ -66,67 +73,50 @@ public class GetWeather {
 		String lastLat = "";
 		String lastLng = "";
 		
-		//TODO: this is skipping extra major legs (only parses KC->STL, and ignores STL->Chicago on a KC->Chicago route)
 		while (routesArrIter.hasNext()) {
 			JSONObject thisRoute = (JSONObject) routesArrIter.next();
-			JSONArray legsArr = (JSONArray) thisRoute.get("legs");
-		
-			/* Walk through all of the legs of the trip. Each leg can contain multiple smaller steps,
-			 * and there can be multiple legs, particularly on longer cross country trips */
-			for (int i = 0; i < legsArr.size(); i++) {
-				JSONObject tmpObj = (JSONObject) legsArr.get(i);
-				JSONArray stepsArr = (JSONArray) tmpObj.get("steps");
-			
-				/* Now to walk through all of the sub steps that make up this leg, since we will frequently
-				 * want weather information for points within a single leg */
-				for (int j = 0; j < stepsArr.size(); j++) {
-					JSONObject thisStep = (JSONObject) stepsArr.get(j);
-					JSONObject duration = (JSONObject) thisStep.get("duration");
-					System.out.println("GetWeather: parseDirections: duration size: "+duration.size());
-					int dValue = Integer.parseInt((String) duration.get("value").toString());	
-					JSONObject startLoc = (JSONObject) thisStep.get("start_location");
-					float startLat = Float.parseFloat(startLoc.get("lat").toString());
-					float startLng = Float.parseFloat(startLoc.get("lng").toString());
-					JSONObject endLoc = (JSONObject) thisStep.get("end_location");
-					float endLat = Float.parseFloat(endLoc.get("lat").toString());
-					float endLng = Float.parseFloat(endLoc.get("lng").toString());
-					lastLat = startLoc.get("lat").toString();
-					lastLng = startLoc.get("lng").toString();
+			JSONObject startGps = (JSONObject) thisRoute.get("start");
+			JSONObject endGps = (JSONObject) thisRoute.get("end");
+			if (weatherInfoC == 0) { //first time through, save the starting point weather
+				weatherInfo.add(getSingleWeather(startGps.get("lat").toString(), startGps.get("lng").toString(), weatherInfoC * legTime));
+				weatherInfoC++;
+			}
+			String startLat = startGps.get("lat").toString();
+			String startLng = startGps.get("lng").toString();
+			String endLat = endGps.get("lat").toString();
+			String endLng = endGps.get("lng").toString();
+			lastLat = endLat;
+			lastLng = endLng;
+			float startLatFloat = Float.parseFloat(startLat);
+			float startLngFloat = Float.parseFloat(startLng);
+			float endLatFloat = Float.parseFloat(endLat);
+			float endLngFloat = Float.parseFloat(endLng);
+			int dValue = Integer.parseInt(thisRoute.get("TotalTime").toString());
 				
-					/* Check if this is the first time through, and if so save the starting point weather */
-					if (weatherInfoC == 0) {
-						JSONObject tmpSingleWeather = getSingleWeather(lastLat, lastLng, weatherInfoC * legTime);
-						weatherInfo.add(tmpSingleWeather);
-						weatherInfoC++;
-					}
-				
-					/* Check if the duration of this leg will put us past our next update point */
-					while (dValue + secondsSinceLast > legTime) {
-						float ratioNeeded = ((float) (legTime - secondsSinceLast)) / (float) dValue;
-						String legLat = Float.toString((endLat - startLat) * ratioNeeded + startLat);
-						String legLng = Float.toString((endLng - startLng) * ratioNeeded + startLng);
-						JSONObject tmpSingleWeather = getSingleWeather(legLat, legLng, weatherInfoC * legTime);
-						weatherInfo.add(tmpSingleWeather);
-						weatherInfoC++;
+			/* Check if the duration of this leg will put us past our next update point */
+			while (dValue + secondsSinceLast > legTime) {
+				float ratioNeeded = ((float) (legTime - secondsSinceLast)) / (float) dValue;
+				String legLat = Float.toString((endLatFloat - startLatFloat) * ratioNeeded + startLatFloat);
+				String legLng = Float.toString((endLngFloat - startLngFloat) * ratioNeeded + startLngFloat);
+				weatherInfo.add(getSingleWeather(legLat, legLng, weatherInfoC * legTime));
+				weatherInfoC++;
 					
-						/* Now to see if this leg.step in the path needs to be subdivided into even more weather points */
-						if (secondsSinceLast + dValue >= legTime) {
-							dValue -= legTime - secondsSinceLast;
-							if (dValue < legTime) {
-								/* This was the last subdivided point in this leg.step */
-								secondsSinceLast = dValue;
-								dValue = 0;
-							} else {
-								/* There are even more subdivided points that we need to get out of this leg.step */
-								secondsSinceLast = 0;
-							}
-						} else {
-							dValue -= legTime - secondsSinceLast;
-							secondsSinceLast = (secondsSinceLast + dValue) % legTime;
-						} //if
-					} //while
-				} //for steps
-			} //for legs
+				/* Now to see if this leg.step in the path needs to be subdivided into even more weather points */
+				if (secondsSinceLast + dValue >= legTime) {
+					dValue -= legTime - secondsSinceLast;
+					if (dValue < legTime) {
+						/* This was the last subdivided point in this step */
+						secondsSinceLast = dValue;
+						dValue = 0;
+					} else {
+						/* There are even more subdivided points that we need to get out of this step */
+						secondsSinceLast = 0;
+					}
+				} else {
+					dValue -= legTime - secondsSinceLast;
+					secondsSinceLast = (secondsSinceLast + dValue) % legTime;
+				} //if
+			} //while
 		} //routesArr while
 		
 		//Handle the weather for the last point now

@@ -56,12 +56,19 @@ public class GetGoogleDirections {
 	 * { "TotalTime" : (int) seconds,
 	 *   "TotalDistance" : (int) meters,
 	 *   "route" : {
-	 *              "NodeN" : {
+	 *              "nodeN" : {
 	 *                         "lat" : (float) latitude,
 	 *                         "lng" : (float) longitude
 	 *                        }
 	 *             }
 	 *  }
+	 *  
+	 *  mapRoute : { "TotalDistance" : (int) meters,
+	 *  			 "TotalTime" : (int) seconds,
+	 *  		     "route" : [ "TotalDistance" : (int) meters,
+	 *  			   "TotalTime" : (int) seconds,
+	 *  			   "start" : { "lat" : (float) latitude, "lng" : (float) longitude },
+	 *  			   "end" : { "lat" : (float) latitude, "lng" : (float) longitude } ] }
 	 */
 	public JSONObject getDirections(JSONObject mapRoute) throws IOException{
 		String startLocEnc = URLEncoder.encode(startLoc);
@@ -106,6 +113,7 @@ public class GetGoogleDirections {
 		 */
 		JSONObject returnResults = new JSONObject(); //The JSON object to return to the caller
 		JSONObject lastNode = new JSONObject();
+		JSONArray fullRoute = new JSONArray();
 		int TotalTime = 0;
 		int TotalDistance = 0;
 		JSONArray routesArr = (JSONArray) mapRoute.get("routes");
@@ -117,10 +125,21 @@ public class GetGoogleDirections {
 			while (legsArrIter.hasNext()) {
 				JSONObject tmpObj = (JSONObject) legsArrIter.next();
 				JSONArray steps = (JSONArray) tmpObj.get("steps");
-				if (!returnResults.containsKey("Node0")) {
-					System.out.println("GetGoogleDirections: getDirections: Found a Node0");
-					//TODO: for some reason this is not saving the assigned Node0
-					assignNodeGps((JSONObject) steps.get(0), returnResults, 0);
+				java.util.ListIterator stepsArrIter = steps.listIterator();
+				while (stepsArrIter.hasNext()) {
+					JSONObject thisStep = (JSONObject) stepsArrIter.next();
+					if (!returnResults.containsKey("Node0")) {
+						System.out.println("GetGoogleDirections: getDirections: Found a Node0");
+						assignNodeGps(thisStep, returnResults, 0);
+					}
+					JSONObject thisDuration = (JSONObject) thisStep.get("duration");
+					JSONObject thisDistance = (JSONObject) thisStep.get("distance");
+					JSONObject tmpFullRoute = new JSONObject();
+					tmpFullRoute.put("TotalDistance", Integer.parseInt(thisDistance.get("value").toString()));
+					tmpFullRoute.put("TotalTime", Integer.parseInt(thisDuration.get("value").toString()));
+					tmpFullRoute.put("start", (JSONObject) thisStep.get("start_location"));
+					tmpFullRoute.put("end", thisStep.get("end_location"));
+					fullRoute.add(tmpFullRoute);
 				}
 				lastNode = (JSONObject) steps.get(steps.size() - 1);
 				JSONObject duration = (JSONObject) tmpObj.get("duration");
@@ -133,6 +152,8 @@ public class GetGoogleDirections {
 		returnResults.put("TotalTime", TotalTime);
 		returnResults.put("TotalDistance", TotalDistance);
 		mapRoute.put("TotalTime",  TotalTime);
+		mapRoute.put("TotalDistance",  TotalDistance);
+		mapRoute.put("route", fullRoute);
 		System.out.println("GetGoogleDirections: getDirections: Total time and distance: "+TotalTime+", "+TotalDistance);
 		System.out.println("GetGoogleDirections: getDirections: mapRoute size before return: "+mapRoute.size());
 		return returnResults;
