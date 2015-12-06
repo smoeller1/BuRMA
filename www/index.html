@@ -1,13 +1,20 @@
 <!DOCTYPE html>
-<html ng-app="starter">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    <title>BuRMA</title>
-
-      <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <style>
+  .carousel-inner > .item > img,
+  .carousel-inner > .item > a > img {
+      width: 70%;
+      margin: auto;
+  }
+  </style>
+<link href="css/style.css" rel="stylesheet">
 
     <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
     <link href="css/ionic.app.css" rel="stylesheet">
@@ -26,24 +33,73 @@
     <!-- your app's js -->
        <script src="js/geolocation.js"></script>
   <script src="js/app.js"></script>
-  </head>
-  <body ng-controller="TodoCtrl">
+</head>
+<body>
 
-    <ion-pane>
-      <ion-header-bar class="bar-positive">
-        <h1 class="title">BuRMA</h1>
-      </ion-header-bar>
-      <ion-content>
-          <div align=center>
-              <a href="register.html" class="btn btn-primary">Register</a><br>
-              <a href="login.html" class="btn btn-primary">Login</a><br>
-              <a href="changepword.html" class="btn btn-primary">Modify Account</a><br>
-              <a href="delete.html" class="btn btn-primary">Delete Account</a><br>
-          </div>
-      </ion-content>
-        <ion-footer-bar class="bar-positive">
-        Home
-    </ion-footer-bar>
-    </ion-pane>
-  </body>
+<div class="container" style="background-color:Lavender;">
+  <h1 align = "center" class="bg-primary" >MAPS</h1>
+    <p align = "center"><strong>Welcome to your MAPS!</strong><a href="register.html" class="btn btn-primary btn-sm, pull-left">Register</a> <a href="login.html" class="btn btn-primary btn-sm, pull-right">Sign in</a> </p>
+</div>
+    
+<div class="container" style="background-color:Lavender;">
+  <br>
+  <div id="myCarousel" class="carousel slide" data-ride="carousel">
+    <!-- Indicators -->
+    <ol class="carousel-indicators">
+      <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+      <li data-target="#myCarousel" data-slide-to="1"></li>
+      <li data-target="#myCarousel" data-slide-to="2"></li>
+      <li data-target="#myCarousel" data-slide-to="3"></li>
+    </ol>
+
+    <!-- Wrapper for slides -->
+    <div class="carousel-inner" role="listbox">
+
+      <div class="item active">
+        <img src="img/askroute.jpg" alt="Chania" width="100%" height="80%">
+        <div class="carousel-caption">
+          <h3>Could you tell me the way to....</h3>
+        </div>
+      </div>
+
+      <div class="item">
+        <img src="img/manual map.jpg" alt="Chania" width="100%" height="80%">
+        <div class="carousel-caption">
+          <h3>Yes here it is</h3>
+          
+        </div>
+      </div>
+    
+      <div class="item">
+        <img src="img/howdoigoto.jpg" alt="Flower" width="100%" height="80%">
+        <div class="carousel-caption">
+          <h3>No more confusion</h3>
+          
+        </div>
+      </div>
+
+      <div class="item">
+        <img src="img/Google_Maps_Logo-1.png" alt="Flower" width="100%" height="80%">
+        <div class="carousel-caption">
+          <h3>We will take you to your destination!</h3>
+          
+        </div>
+      </div>
+
+  
+    </div>
+
+    <!-- Left and right controls -->
+    <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+    </a>
+    <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a>
+  </div>
+</div>
+
+</body>
 </html>

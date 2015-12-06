@@ -6,6 +6,7 @@ var url = "http://mongorestapp.mybluemix.net/user";
 //Factory use
 services.factory('MongoRESTService', function($http) {
     return {
+        
         login: function(username, password, callback) {
             console.log("MongoRESTService: login: started");
             var res = $http({
@@ -25,6 +26,7 @@ services.factory('MongoRESTService', function($http) {
                 console.log("MongoRESTService: login: Error: " + data.StatusReason);
             });
         }, // end login
+        
         register: function(username, password, fname, lname, email, mobilenum, address, city, state, country, language, routepref, callback) {
             console.log("MongoRESTService: register: started");
             var res = $http({
@@ -56,6 +58,7 @@ services.factory('MongoRESTService', function($http) {
                 console.log("MongoRESTService: register: Error: "+data);
             });
         }, //end register
+        
         updateAccount: function(username, password, newpassword, fname, lname, email, mobilenum, address, city, state, country, language, routepref, callback) {
             //TODO change any calling functions that use this
             console.log("MongoRESTService: changePassword: started");
@@ -89,6 +92,7 @@ services.factory('MongoRESTService', function($http) {
                 console.log("MongoRESTService: updateAccount: Error: "+data);
             });
         }, //end updateAccount
+        
         deleteAccount: function(username, password, callback) {
             console.log("MongoRESTService: deleteAccount: started");
             var res = $http({
@@ -108,7 +112,8 @@ services.factory('MongoRESTService', function($http) {
                 console.log("MongoRESTService: deleteAccount: Error: " + data);
             });
         }, //end deleteAccount
-        getDirections: function(startAddress, endAddress, waypoint, callback) {
+        
+        getDirections: function(startAddress, endAddress, waypoint, routepref, callback) {
             console.log("MongoRESTService: getDirections: started");
             var res = $http({
                 url: url,
@@ -117,17 +122,20 @@ services.factory('MongoRESTService', function($http) {
                     RequestType: 10,
                     RouteStartAddress: startAddress,
                     RouteEndAddress: endAddress,
-                    WaypointAddress: waypoint
+                    WaypointAddress: waypoint,
+                    RoutePref: routepref
                 })
             });
             res.success(function(data, status, headers, config) {
                 console.log("MongoRESTService: getDirections: Success: " + data.Status + ": " + data.StatusReason);
+                console.log("MongoRESTService: getDirections: Success data: " + data);
                 callback(data);
             });
             res.error(function(data, status, headers, config) {
                 console.log("MongoRESTService: getDirections: Error: "+ data.Status + ": " + data.StatusReason);
             });
         }, //end getDirections
+        
         translate: function(targetLanguage, text, callback) {
             console.log("MongoRESTService: translate: started from en to " + targetLanguage);
             if (targetLanguage == 'null') {
@@ -154,6 +162,7 @@ services.factory('MongoRESTService', function($http) {
                 console.log("MongoRESTService: translate: Error: " + data.Status + ": " + data.StatusReason);
             });
         } //end translate
+        
     }
 });  //end MongoRESTService
 
@@ -233,10 +242,15 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
                 console.log("TodoCtrl: initialize: Translated Go to " + result.TranslatedTxt);
                 $scope.goLocalized = result.TranslatedTxt;
             });
+            result = MongoRESTService.translate(localStorage.getItem("language"), 'Waypoint', function(result) {
+                console.log("TodoCtrl: initialize: Tranlated Waypoint to " + result.TranslatedTxt);
+                $scope.waypointLocalized = result.TranslatedTxt;
+            });
         } else {
             $scope.startLocalized = "Start";
             $scope.endLocalized = "End";
             $scope.goLocalized = "Go";
+            $scope.waypointLocalized = "Waypoint";
         }
       
         $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
@@ -306,9 +320,10 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
         alert('Example of infowindow with ng-click')
       };
     
-    $scope.calcRoute = function(start, end) {
+    $scope.calcRoute = function(start, end, waypoint, routepref) {
         console.log("TodoCtrl: calcRoute: Entered function");
-        var result = MongoRESTService.getDirections(start, end, null, function(result) {
+        //TODO: if waypoint is null, make sure backend knows it
+        var result = MongoRESTService.getDirections(start, end, waypoint, routepref, function(result) {
             //The result object is a JSON object of Google Maps directions directives
             console.log("TodoCtrl: calcRoute: Received results (" + result.Status + "), totalTime: "+result.TotalTime);
             console.log("TodoCtrl: calcRoute: JSON Object: "+result.Status+", "+result.StatusReason);
@@ -328,7 +343,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
                 });
             }
         });
-        var request = $scope.setRequest(start, end);
+        var request = $scope.setRequest(start, end, waypoint);
         
         directionsService.route(request, function(response, status) {
             if (status === google.maps.DirectionsStatus.OK) {
@@ -342,16 +357,36 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
         return true;
     };
     
-    $scope.setRequest = function(start, end) {
-        console.log("TodoCtrl: setRequest: Entered function");
-        var request = {
-            origin: start,
-            destination: end,
-            travelMode : google.maps.TravelMode.DRIVING
-        };
-        return request;
-    };
-    
+    $scope.setRequest = function(start, end, waypoint) {
+		if(waypoint!= null)
+		{
+			var waypts = [];
+			waypts.push({
+			location: waypoint,
+			stopover: true
+			});
+			console.log("TodoCtrl: setRequest: Entered function");
+			var request = {
+				origin: start, //data.node0
+				destination: end, //data.nodeN
+				waypoints: waypts,  //data.node1:N-1
+				optimizeWaypoints: true,
+				travelMode : google.maps.TravelMode.DRIVING
+			};
+			return request;
+		}
+		else
+		{
+			console.log("TodoCtrl: setRequest: Entered function");
+			var request = {
+				origin: start,
+				destination: end,
+				travelMode : google.maps.TravelMode.DRIVING
+			};
+			return request;
+		
+		}
+    }; 
 })
 
 .controller('RegisterCtrl', function($scope, $ionicPlatform, $ionicLoading, MongoRESTService, $compile, $http, $window) {

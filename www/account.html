@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html ng-app="starter">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title>BuRMA</title>
+
+       <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <link href="css/ionic.app.css" rel="stylesheet">
+    -->
+
+    <!-- ionic/angularjs js -->
+    <script src="lib/ionic/js/ionic.bundle.js"></script>
+      <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
+ 
+      <script src="js/ng-cordova.min.js"></script>
+    <!-- cordova script (this will be a 404 during development) -->
+    <script src="cordova.js"></script>
+      <script src="js/angularfire.min.js"></script>
+      <script src="js/firebase.js"></script>
+
+    <!-- your app's js -->
+       <script src="js/geolocation.js"></script>
+  <script src="js/app.js"></script>
+  </head>
+  <body ng-controller="RegisterCtrl">
+    <ion-pane>
+		<ion-content>
+		<div style="background-color:lavender;">
+			 <h1 align = "center" class="bg-primary" >BURMA</h1>
+	<a href="map.html" class="btn btn-primary btn-sm, pull-left">
+		<span class="glyphicon glyphicon-home"></span> Home</a>
+	<a href="delete.html" class="btn btn-primary btn pull-right">
+          <span class="glyphicon glyphicon-remove-circle"></span> Delete
+        </a>
+	<a href="changepword.html" class="btn btn-primary btn-sm, pull-right">
+		<span class="glyphicon glyphicon-home"></span> Update Password</a>
+	
+	
+  <h1 align = "left">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Account</h1>
+		
+  <form class="form-horizontal">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="FirstName">First Name:</label>
+      <div class="col-sm-4">
+        <input type="text" class="form-control" ng-model = "fname" placeholder="First Name"  > 
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="LastName">Last Name:</label>
+      <div class="col-sm-4">
+        <input type="text" class="form-control" ng-model = "lname" placeholder="Last Name">
+      </div>
+	  </div>
+       <div class="form-group">
+      <label class="control-label col-sm-2" for="MobileNumber">Mobile Number:</label>
+      <div class="col-sm-4">
+        <input type="tel" class="form-control" ng-model="mobilenum" placeholder="Mobile Number">
+      </div>
+    </div>
+	  <div class="form-group">
+      <label class="control-label col-sm-2" for="HomeAddress">Home Address:</label>
+      <div class="col-sm-4">
+        <input type="" class="form-control" ng-model="address" placeholder="Street">
+		 <input type="" class="form-control" ng-model="city" placeholder="City">
+		  <input type="" class="form-control" ng-model="state" placeholder="State">
+		  <input type="" class="form-control" ng-model="country" placeholder="Country">
+		  <button ng-click=" " class="btn btn-primary btn-sm, pull-right">Add/Update</button>
+      </div>
+    </div>
+	  <div class="form-group">
+      <label class="control-label col-sm-2" for="OfficeAddress">Office Address:</label>
+      <div class="col-sm-4">
+        <input type="" class="form-control" ng-model="address" placeholder="Street">
+		 <input type="" class="form-control" ng-model="city" placeholder="City">
+		  <input type="" class="form-control" ng-model="state" placeholder="State">
+		  <input type="" class="form-control" ng-model="country" placeholder="Country">
+		  <button ng-click=" " class="btn btn-primary btn-sm, pull-right">Add/Update</button>
+      </div>
+    </div>
+    
+		</form>
+		</div>
+  </ion-content>
+	</ion-pane>
+  </body>
+</html>

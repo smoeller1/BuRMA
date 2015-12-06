@@ -5,7 +5,9 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
     <title>BuRMA</title>
 
-      <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+       <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -30,25 +32,41 @@
   <body ng-controller="RegisterCtrl">
 
     <ion-pane>
-      <ion-header-bar class="bar-positive">
-        <h1 class="title">BuRMA</h1>
-      </ion-header-bar>
       <ion-content>
-          <h2>Delete Account</h2>
-          <div>To delete an account, enter the login info below and click Remove</div>
-          <label class="item item-input">
-              <span class="input-label">Username</span>
-              <input type="text" ng-model="username" placeholder="Username"></label>
-          <label class="item item-input">
-              <span class="input-label">Password</span>
-              <input type="password" ng-model="password" placeholder="Password"></label>
-          <a id="btn" class="button" ng-click="removeUser(username, password)">Remove</a><br>
+		  <div style="background-color:lavender;">
+			  <h1 align = "center" class="bg-primary" >BURMA</h1>
+		  <a href="map.html" class="btn btn-primary btn-sm, pull-left">
+		<span class="glyphicon glyphicon-home"></span> Home</a>
+		  </br>
+  
+          <h2> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Delete Account</h2>
+		  </br>
+		  <form class="form-horizontal">
+		  <div class="form-group">
+      <label class="control-label col-sm-2" for="username">User Name:</label>
+      <div class="col-sm-4">
+        <input type="text" class="form-control" ng-model="username" placeholder="Enter User Name">
+      </div>
+    </div>
+    
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="pwd">Password:</label>
+      <div class="col-sm-4">          
+        <input type="password" class="form-control" ng-model="password" placeholder="Enter password">
+      </div>
+    </div>
+			  
+		 <div class="form-group">        
+      <div class="col-sm-offset-4 col-sm-2">
+        <button ng-click="removeUser(username, password)" class="btn btn-primary btn-sm, pull-right">Delete </button>
+      </div>
+    </div>
           <span data-ng-bind="displayRMsg"></span><br>
-
+		  </form>
+		  </br></br></br></br></br></br></br></br></br></br></br></br></br></br></br>
+		  </div>
+		<div>To delete an account, enter the login info below and click Remove</div>
       </ion-content>
-        <ion-footer-bar class="bar-positive">
-            Delete - <a href="index.html"><span class="glyphicon glyphicon-home"></span></a>
-    </ion-footer-bar>
     </ion-pane>
   </body>
 </html>
