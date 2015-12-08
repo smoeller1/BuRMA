@@ -67,6 +67,10 @@
               <span data-ng-bind="goLocalized"></span>
           </a><br>
           <span data-ng-bind="routingError"></span><br>
+<div><table border="1px"><tr ng-repeat="(key,value) in result">
+                    <td>{{key}}</td>
+                    <td>{{value}}</td>
+    </tr></table></div>
           <div id="map" data-tap-disabled="true"></div>
           
           <div>

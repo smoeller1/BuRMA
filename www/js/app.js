@@ -128,6 +128,11 @@ services.factory('MongoRESTService', function($http) {
             });
             res.success(function(data, status, headers, config) {
                 console.log("MongoRESTService: getDirections: Success: " + data.Status + ": " + data.StatusReason);
+                for(i in data) {
+                    for(k in data[i]) {
+                        console.log("MongoRESTService: getDirections: Success keys: " + i + " : " + k);
+                    }
+                }
                 console.log("MongoRESTService: getDirections: Success data: " + data);
                 callback(data);
             });
@@ -331,7 +336,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
             if (localStorage.getItem("language") == 'en'
                || localStorage.getItem("language") == 'undefined') {
                 $scope.startWeather = "Current weather: " + result.WeatherInfo[0].temp_f + "F and " + result.WeatherInfo[0].icon;
-                $scope.endWeather = "Current weather: " + result.WeatherInfo[2].temp_f + "F and " + result.WeatherInfo[2].icon;
+                $scope.endWeather = "Current weather: " + result.WeatherInfo[1].temp_f + "F and " + result.WeatherInfo[1].icon;
             } else {
                 var result = MongoRESTService.translate(localStorage.getItem("language"), "Current weather: " + result.WeatherInfo[0].temp_c + "C and " + result.WeatherInfo[0].icon, function(result) {
                     console.log("TodoCtrl: initialize: Translated Start to " + result.TranslatedTxt);
@@ -492,13 +497,13 @@ angular.module('starter', ['ionic', 'ngCordova', 'mongoapp.services'])
     $scope.ModifyAccount = function(uname, oldpass, newpass, newpass2, fname, lname, email, mobilenum, address, city, state, country, language, routepref) {
         Log.log(6, "RegisterCtrl: ModifyAccount: started");
         
-        var result = MongoRESTService.updateAccount(uname, oldpass, fname, lname, email, mobilenum, address, city, state, country, language, routepref, function(result) {
+        var result = MongoRESTService.updateAccount(uname, oldpass, null, fname, lname, email, mobilenum, address, city, state, country, language, routepref, function(result) {
             Log.log(6, "RegisterCtrl: ModifyAccount: updated account");
         });
         
         if (newpass != null) {
             //Assume the user is wanting to change their password since they entered a new one
-            changePword(uname, oldpass, newpass, newpass2);
+            $scope.changePword(uname, oldpass, newpass, newpass2);
         }
         
         var aUser = new endUser();
